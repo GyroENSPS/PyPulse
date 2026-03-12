@@ -1,0 +1,11 @@
+# Configuration matérielle — adapter aux adresses IP du labo
+
+pulse_streamer:
+  ip: "169.254.8.2"        # IP par défaut USB-DHCP
+  use_ext_clock: false      # true pour horloge externe 10 MHz
+
+daq:
+  device_name: "Dev1"       # Nom de la carte dans NI MAX
+
+rf_source:
+  address: "TCPIP0::192.168.148.98::inst0::INSTR"

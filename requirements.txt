@@ -1,0 +1,18 @@
+# Instruments
+pulsestreamer
+nidaqmx
+
+# GUI
+PyQt5
+pyqtgraph
+
+# Calcul & données
+numpy
+scipy
+matplotlib
+
+# Configuration
+pyyaml
+
+# Utilitaires
+tqdm
