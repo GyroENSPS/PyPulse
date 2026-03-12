@@ -1,6 +1,0 @@
-# Paramètres par défaut des séquences
-
-programme_1:
-  high_ns: 500
-  low_ns: 500
-  n_repeat: -1    # -1 = infini
