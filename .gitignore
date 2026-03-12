@@ -1,34 +1,8 @@
-# Python
 __pycache__/
 *.py[cod]
-*.pyo
-*.pyd
-.Python
-*.egg-info/
-dist/
-build/
-.eggs/
-
-# Données de mesure
-data/
-*.csv
-*.npy
-*.npz
-*.hdf5
-
-# Environnements virtuels
 .venv/
 venv/
-env/
-
-# IDE
-.vscode/
 .idea/
-*.swp
-
-# OS
-.DS_Store
-Thumbs.db
-
-# Fichiers de config locaux (contiennent des IPs, tokens…)
-config/local_*.yaml
+.vscode/
+data/
+*.cfg

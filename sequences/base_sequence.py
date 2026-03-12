@@ -1,30 +1,31 @@
-# Classe de base pour toutes les séquences de mesure
-from abc import ABC, abstractmethod
-from hardware.pulse_streamer import PulseStreamerDriver
+# Classe de base abstraite pour toutes les séquences de mesure.
 
 
-class BaseSequence(ABC):
+class BaseSequence:
     """
-    Classe abstraite dont héritent toutes les séquences (Rabi, T1, T2…).
-    Chaque séquence doit implémenter `build_pattern()` et `run()`.
+    Toutes les séquences (Programme 1, Rabi, T1…) héritent de cette classe.
+    Impose l'interface : build_pattern() → run().
     """
 
-    def __init__(self, ps_driver: PulseStreamerDriver):
-        self.ps = ps_driver
-        self._pattern_tuples = None  # list[list[tuple]]
+    def __init__(self, ps_driver):
+        """ps_driver : instance de PulseStreamerDriver."""
+        pass
 
-    @abstractmethod
-    def build_pattern(self, **kwargs) -> list:
+    def build_pattern(self, **kwargs):
         """
-        Construit et retourne la liste de 10 patterns
-        (indices 0-7 : digitaux, 8-9 : analogiques).
+        Construit et retourne un objet Pattern correspondant à la séquence.
+        Les paramètres propres à chaque séquence sont passés en kwargs.
+        À surcharger dans chaque sous-classe.
         """
-        ...
+        pass
 
-    @abstractmethod
     def run(self, **kwargs):
-        """Charge le pattern et lance le streaming."""
-        ...
+        """
+        Appelle build_pattern(), construit la Sequence et lance le streaming.
+        À surcharger dans chaque sous-classe.
+        """
+        pass
 
     def stop(self):
-        self.ps.stop()
+        """Arrête le streaming en cours."""
+        pass
