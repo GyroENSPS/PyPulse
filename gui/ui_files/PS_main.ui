@@ -794,6 +794,13 @@
            </widget>
           </item>
           <item>
+           <widget class="QPushButton" name="pushButton_PS_run_N_times">
+            <property name="text">
+             <string>Stream sequence N times</string>
+            </property>
+           </widget>
+          </item>
+          <item>
            <widget class="QPushButton" name="pushButton_PS_run_continuous">
             <property name="text">
              <string>Stream sequence continuously</string>
@@ -803,7 +810,7 @@
           <item>
            <widget class="QPushButton" name="pushButton_PS_reset">
             <property name="text">
-             <string>Reset PulseStremer</string>
+             <string>Reset</string>
             </property>
            </widget>
           </item>
@@ -814,40 +821,6 @@
      </widget>
     </item>
    </layout>
-  </widget>
-  <widget class="QMenuBar" name="menubar">
-   <property name="geometry">
-    <rect>
-     <x>0</x>
-     <y>0</y>
-     <width>1746</width>
-     <height>21</height>
-    </rect>
-   </property>
-   <widget class="QMenu" name="menuFile">
-    <property name="title">
-     <string>File</string>
-    </property>
-    <addaction name="actionNew_pulse_sequence"/>
-   </widget>
-   <widget class="QMenu" name="menuConfig">
-    <property name="title">
-     <string>Config</string>
-    </property>
-    <widget class="QMenu" name="menuHardware_configuration">
-     <property name="title">
-      <string>Hardware configuration</string>
-     </property>
-     <addaction name="actionpulseStreamer"/>
-     <addaction name="actionMFLI"/>
-     <addaction name="actionKeysight_33512B"/>
-    </widget>
-    <addaction name="menuHardware_configuration"/>
-    <addaction name="actionSave_pulse_config"/>
-    <addaction name="actionLoad_pulse_configuration"/>
-   </widget>
-   <addaction name="menuFile"/>
-   <addaction name="menuConfig"/>
   </widget>
   <widget class="QStatusBar" name="statusbar"/>
   <action name="actionNew_pulse_sequence">

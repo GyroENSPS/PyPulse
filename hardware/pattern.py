@@ -1,67 +1,55 @@
-# Classe Pattern — représentation multi-canaux d'une séquence d'impulsions.
-# Un pattern est un dictionnaire {canal: [(durée_ns, valeur), ...]}.
+import numpy as np
 
 
 class Pattern:
     """
-    Représente un ensemble de canaux (digitaux ou analogiques)
-    sous la forme de listes de tuples (durée en ns, valeur).
-
     Canaux digitaux : 0–7  (valeur : 0 ou 1)
     Canaux analogiques : 0–1  (valeur : float en V)
+    Stockage : {canal: [(durée_ns, valeur), ...]}
     """
 
     def __init__(self):
-        pass
+        self.p = {}
 
-    # --- Affectation des canaux ---
+    def set_digital(self, channel: int, pattern: list):
+        self.p[channel] = pattern
 
-    def set_digital(self, channel: int, pattern: list) -> None:
-        """Affecte un pattern à un canal digital (0–7)."""
-        pass
+    def set_analog(self, channel: int, pattern: list):
+        self.p[channel] = pattern
 
-    def set_analog(self, channel: int, pattern: list) -> None:
-        """Affecte un pattern à un canal analogique (0–1)."""
-        pass
-
-    # --- Lecture ---
-
-    def get_channels(self) -> list:
-        """Retourne la liste de tous les canaux définis."""
-        pass
+    def get_channels(self):
+        return self.p.keys()
 
     def get_pattern(self, channel: int) -> list:
-        """Retourne le pattern d'un canal donné."""
-        pass
+        return self.p[channel]
 
     def get_length(self, channel: int = -1) -> int:
-        """
-        Retourne la durée totale (ns) d'un canal.
-        Si channel == -1, retourne le maximum sur tous les canaux.
-        """
-        pass
+        if channel >= 0:
+            return int(np.sum([t[0] for t in self.p[channel]]))
+        return max(self.get_length(c) for c in self.get_channels()) if self.p else 0
 
-    # --- Manipulation ---
-
-    def equalize(self) -> None:
-        """
-        Égalise la durée de tous les canaux en prolongeant les plus courts
-        avec un segment à 0 (LOW / 0 V).
-        """
-        pass
+    def equalize(self):
+        length = self.get_length()
+        for c in self.get_channels():
+            diff = length - self.get_length(c)
+            if diff > 0:
+                self.p[c] = self.p[c] + [(diff, 0)]
 
     def repeat(self, n: int) -> 'Pattern':
-        """
-        Répète le pattern n fois sur tous les canaux.
-        Égalise d'abord les canaux.
-        Retourne self.
-        """
-        pass
+        self.equalize()
+        for c in self.get_channels():
+            self.p[c] = self.p[c] * n
+        return self
 
     def append(self, other: 'Pattern') -> 'Pattern':
-        """
-        Concatène un autre Pattern à la suite de celui-ci.
-        Égalise les deux patterns avant la concaténation.
-        Retourne self.
-        """
-        pass
+        self.equalize()
+        other.equalize()
+        length = self.get_length()
+        # Canaux présents dans other mais pas dans self → ajouter silence initial
+        for c in other.get_channels():
+            if c not in self.get_channels():
+                self.p[c] = [(length, 0)]
+        for c in self.get_channels():
+            if c in other.get_channels():
+                self.p[c] = self.p[c] + other.p[c]
+        return self

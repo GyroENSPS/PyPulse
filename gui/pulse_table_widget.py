@@ -27,11 +27,13 @@ class PulseTableWidget:
     Rows 9–10: QTableWidgetItem (float) — analog channels AO0–AO1
     """
 
-    def __init__(self, table_widget, list_variable_names: list):
+    def __init__(self, table_widget, list_variable_names: list, on_change_callback=None):
         self.table = table_widget
         self.table.setVerticalHeaderLabels(ROW_LABELS)
+        self._on_change_callback = on_change_callback  # callback externe
         self.list_variable_names = list_variable_names
         self._init_first_column()
+
 
     def _init_first_column(self):
         """Initialize the first column on startup."""
@@ -97,6 +99,8 @@ class PulseTableWidget:
 
     def _on_change(self):
         """Called whenever a cell value changes — hook for live preview."""
+        if self._on_change_callback:
+            self._on_change_callback()
         pass
 
     # --- Public API : columns ---

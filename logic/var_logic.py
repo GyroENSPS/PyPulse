@@ -13,6 +13,12 @@ class VarLogic:
         self.pulse_table = pulse_table_widget_ref  # PulseTableWidget instance
         self.python_var_flag = False
         self._init_first_row()
+        try:
+            self.load_config(r"config\var_config\default_var_config.cfg")
+            self.pulse_table.load_config(r"config\pulse_config\default_pulse.cfg")
+
+        except Exception as e:
+            print("Error : ", e)
 
     def _init_first_row(self):
         """Add default first row on startup."""

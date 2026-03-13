@@ -1,64 +1,53 @@
-# Driver bas niveau — PulseStreamer 8/2 (Swabian Instruments)
-# Gère la connexion, la configuration et le streaming.
+from pulsestreamer import PulseStreamer, Sequence, ClockSource
 
 
 class PulseStreamerDriver:
-    """
-    Interface directe avec la PulseStreamer.
-    Responsabilité : connexion, horloge, stream, stop, reset.
-    """
 
-    def __init__(self, ip: str):
-        pass
-
-    # --- Connexion ---
+    def __init__(self, ip: str, clock: str = "internal"):
+        self.ip       = ip
+        self.clock   = clock  # "internal" ou "external"
+        self._device  = None
 
     def connect(self):
-        """Établit la connexion avec la PulseStreamer via son IP."""
-        pass
+        try:
+            self._device = PulseStreamer(self.ip)
+            if self.clock == "external":
+                self.select_external_clock()
+            else:
+                self.select_internal_clock()
+            print(f"PulseStreamer connected at {self.ip} — clock: {self.clock}")
+        except Exception as e:
+            print(f"[Connection error] {e}")
+            self._device = None
 
     def disconnect(self):
-        """Remet les sorties à 0 et libère la connexion."""
-        pass
+        if self._device:
+            self._device.reset()
+            self._device = None
 
     def is_connected(self) -> bool:
-        """Retourne True si la connexion est active."""
-        pass
-
-    # --- Horloge ---
+        return self._device is not None
 
     def select_internal_clock(self):
-        """Sélectionne l'horloge interne de la PulseStreamer."""
-        pass
+        self._device.selectClock(ClockSource.INTERNAL)
 
     def select_external_clock(self):
-        """Sélectionne une horloge externe 10 MHz."""
-        pass
+        self._device.selectClock(ClockSource.EXT_10MHZ)
 
-    # --- Séquence ---
+    def create_sequence(self) -> Sequence:
+        return self._device.createSequence()
 
-    def create_sequence(self) -> object:
-        """Crée et retourne un objet Sequence vide (API pulsestreamer)."""
-        pass
+    def load_sequence(self, sequence: Sequence):
+        self._sequence = sequence
 
-    def load_sequence(self, sequence) -> None:
-        """Charge un objet Sequence dans la PulseStreamer (sans démarrer)."""
-        pass
+    def stream_infinite(self, sequence: Sequence):
+        self._device.stream(sequence, PulseStreamer.REPEAT_INFINITELY)
 
-    # --- Streaming ---
+    def stream_n_times(self, sequence: Sequence, n: int):
+        self._device.stream(sequence, n)
 
-    def stream_infinite(self, sequence) -> None:
-        """Lance la séquence en boucle infinie."""
-        pass
+    def stop(self):
+        self._device.constant()
 
-    def stream_n_times(self, sequence, n: int) -> None:
-        """Lance la séquence n fois."""
-        pass
-
-    def stop(self) -> None:
-        """Arrête le streaming en cours."""
-        pass
-
-    def reset(self) -> None:
-        """Remet toutes les sorties à 0 (état initial)."""
-        pass
+    def reset(self):
+        self._device.reset()

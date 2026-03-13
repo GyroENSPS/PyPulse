@@ -5,6 +5,10 @@ from gui.pulse_table_widget import PulseTableWidget
 from logic.var_logic import VarLogic
 from logic.sequence_logic import SequenceLogic
 from gui.pulse_viewer import PulseViewer
+from hardware.pulse_streamer import PulseStreamerDriver
+from hardware.sequence_builder import SequenceBuilder
+import configparser
+
 import os
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))  # dossier de main_window.py
@@ -27,11 +31,26 @@ class MainWindow(QtWidgets.QMainWindow):
         self.ui.comboBox_trigger_per_point_channel.setCurrentIndex(2)
 
         # Init logic
-        self.pulse_table = PulseTableWidget(self.ui.tableWidget, [])
+        self.pulse_table = PulseTableWidget(self.ui.tableWidget, [], on_change_callback=self._plot_pulse)
         self.var_logic   = VarLogic(self.ui.tableWidget_var, self.pulse_table)
         self.sequence_logic = SequenceLogic(self.pulse_table, self.var_logic)
         self.pulse_viewer = PulseViewer(self.ui.pulse_view)
-        self.pulse_table._on_change = self._plot_pulse
+
+
+        # Init PulseStreamer
+        BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+        hw_cfg_path = os.path.join(BASE_DIR, "..", "config", "hardware.cfg")
+
+        hw_config = configparser.ConfigParser()
+        hw_config.read(hw_cfg_path)
+
+        ps_ip = hw_config.get("pulse_streamer", "ip", fallback="169.254.8.2")
+        ps_clock = hw_config.get("pulse_streamer", "clock", fallback="internal")
+
+        self.ps_driver = PulseStreamerDriver(ip=ps_ip, clock=ps_clock)
+
+        self.sequence_builder = SequenceBuilder(self.ps_driver)
+        self.sequence_builder = SequenceBuilder(self.ps_driver)
 
         self._connect_signals()
 
@@ -64,6 +83,33 @@ class MainWindow(QtWidgets.QMainWindow):
         # plot viewer for measurement sequences
         self.ui.pushButton_pulse_sequence.clicked.connect(self._preview_sequence)
         self.ui.pushButton_compute_sequence.clicked.connect(self._compute_sequence)
+        # PulseStreamer
+        self.ui.pushButton_PS_run_continuous.clicked.connect(self._run_continuous)
+        self.ui.pushButton_PS_reset.clicked.connect(self._stop_stream)
+        self.ui.pushButton_PS_run_N_times.clicked.connect(self._run_n_times)
+
+    def _run_continuous(self):
+        if not hasattr(self, "final_patterns") or self.final_patterns is None:
+            print("No sequence computed yet.")
+            return
+        if not self.ps_driver.is_connected():
+            self.ps_driver.connect()
+        sequence = self.sequence_builder.build(self.final_patterns)
+        self.ps_driver.stream_infinite(sequence)
+
+    def _run_n_times(self):
+        if not hasattr(self, "final_patterns") or self.final_patterns is None:
+            print("No sequence computed yet.")
+            return
+        if not self.ps_driver.is_connected():
+            self.ps_driver.connect()
+        n = self.ui.spinBox_n_average.value()
+        sequence = self.sequence_builder.build(self.final_patterns)
+        self.ps_driver.stream_n_times(sequence, n)
+
+    def _stop_stream(self):
+        if self.ps_driver.is_connected():
+            self.ps_driver.reset()
 
     def _on_var_changed(self):
         self.var_logic.update_param_names()
@@ -109,6 +155,8 @@ class MainWindow(QtWidgets.QMainWindow):
         self.final_patterns = final_patterns  # garde en mémoire pour le streaming
 
     def _plot_pulse(self):
+        if not hasattr(self, "sequence_logic") or not hasattr(self, "pulse_viewer"):
+            return
         pulse_durations, IO_matrix, variable_index = self.sequence_logic.export_for_viewer()
         min_val = self.ui.spinBox_min.value()
         max_val = self.ui.spinBox_max.value()
