@@ -2,9 +2,17 @@ import configparser
 from PyQt5.QtWidgets import QCheckBox, QTableWidgetItem, QComboBox, QMessageBox, QFileDialog
 
 CHANNEL_COLORS = [
-    "#e6194b", "#3cb44b", "#ffe119", "#4363d8",
-    "#f58231", "#911eb4", "#42d4f4", "#f032e6"
-]
+                    "#1f77b4",  # bleu
+                    "#ff7f0e",  # orange
+                    "#2ca02c",  # vert
+                    "#d62728",  # rouge
+                    "#9467bd",  # violet
+                    "#8c564b",  # brun
+                    "#e377c2",  # rose
+                    "#7f7f7f",  # gris
+                    "#bcbd22",  # jaune-vert
+                    "#17becf"   # cyan
+                    ]
 ROW_LABELS = ["Duration", "D0", "D1", "D2", "D3", "D4", "D5", "D6", "D7", "A0", "A1"]
 NUM_DIGITAL_ROWS = 8   # rows 1–8
 NUM_ANALOG_ROWS  = 2   # rows 9–10

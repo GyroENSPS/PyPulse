@@ -3,6 +3,8 @@ from PyQt5 import QtWidgets
 from gui.ui_files.py_files.UI_PS_main import Ui_MainWindow
 from gui.pulse_table_widget import PulseTableWidget
 from logic.var_logic import VarLogic
+from logic.sequence_logic import SequenceLogic
+from gui.pulse_viewer import PulseViewer
 import os
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))  # dossier de main_window.py
@@ -17,6 +19,9 @@ class MainWindow(QtWidgets.QMainWindow):
         # Init logic
         self.pulse_table = PulseTableWidget(self.ui.tableWidget, [])
         self.var_logic   = VarLogic(self.ui.tableWidget_var, self.pulse_table)
+        self.sequence_logic = SequenceLogic(self.pulse_table, self.var_logic)
+        self.pulse_viewer = PulseViewer(self.ui.pulse_view)
+        self.pulse_table._on_change = self._plot_pulse
 
         self._connect_signals()
 
@@ -39,11 +44,23 @@ class MainWindow(QtWidgets.QMainWindow):
         self.ui.pushButton_sort_py_vars.clicked.connect(
             lambda: self.var_logic.sort_and_resolve()
         )
+        self.ui.pushButton_plot_pulse.clicked.connect(self._plot_pulse)
 
         # Auto-sync var names → comboboxes on cell change
-        self.ui.tableWidget_var.cellChanged.connect(
-            lambda: self.var_logic.update_param_names()
-        )
+        self.ui.tableWidget_var.cellChanged.connect(lambda _: self._on_var_changed())
+        # Update plot viewer after every changes
+        self.ui.tableWidget_var.cellChanged.connect(self._plot_pulse)
+        self.ui.tableWidget_var.itemChanged.connect(lambda: self._plot_pulse())
+
+    def _on_var_changed(self):
+        self.var_logic.update_param_names()
+        self._plot_pulse()
+
+    def _plot_pulse(self):
+        pulse_durations, IO_matrix, variable_index = self.sequence_logic.export_for_viewer()
+        min_val = self.ui.spinBox_min.value()
+        max_val = self.ui.spinBox_max.value()
+        self.pulse_viewer.plot_pattern(pulse_durations, IO_matrix, variable_index, min_val, max_val)
 
     def _save_pulse_config(self):
         path, _ = QtWidgets.QFileDialog.getSaveFileName(
