@@ -5,10 +5,10 @@ CHANNEL_COLORS = [
     "#e6194b", "#3cb44b", "#ffe119", "#4363d8",
     "#f58231", "#911eb4", "#42d4f4", "#f032e6"
 ]
-
+ROW_LABELS = ["Duration", "D0", "D1", "D2", "D3", "D4", "D5", "D6", "D7", "A0", "A1"]
 NUM_DIGITAL_ROWS = 8   # rows 1–8
 NUM_ANALOG_ROWS  = 2   # rows 9–10
-TOTAL_ROWS       = 11  # row 0 (combobox) + 8 digital + 2 analog + 1 header = 11
+TOTAL_ROWS       = 1  # row 0 (combobox) + 8 digital + 2 analog + 1 header = 11
 
 
 class PulseTableWidget:
@@ -21,6 +21,7 @@ class PulseTableWidget:
 
     def __init__(self, table_widget, list_variable_names: list):
         self.table = table_widget
+        self.table.setVerticalHeaderLabels(ROW_LABELS)
         self.list_variable_names = list_variable_names
         self._init_first_column()
 

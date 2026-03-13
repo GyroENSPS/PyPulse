@@ -128,7 +128,7 @@ class Ui_MainWindow(object):
         sizePolicy.setVerticalStretch(0)
         sizePolicy.setHeightForWidth(self.tableWidget.sizePolicy().hasHeightForWidth())
         self.tableWidget.setSizePolicy(sizePolicy)
-        self.tableWidget.setRowCount(10)
+        self.tableWidget.setRowCount(11)
         self.tableWidget.setColumnCount(1)
         self.tableWidget.setObjectName("tableWidget")
         self.verticalLayout_3.addWidget(self.tableWidget)
