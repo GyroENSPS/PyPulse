@@ -77,10 +77,6 @@ class VarLogic:
         self.pulse_table.update_combobox_items(names)
 
     def create_python_var(self) -> list:
-        """
-        Evaluates all variable expressions using exec(), retrying up to 100 times
-        to resolve inter-variable dependencies. Returns list of values (one per row).
-        """
         row_count = self.table.rowCount()
         var_names = [None] * row_count
         var_values = [None] * row_count
@@ -93,17 +89,24 @@ class VarLogic:
             for row in range(row_count):
                 name_item = self.table.item(row, 0)
                 val_item = self.table.item(row, 1)
-                var_name_str = name_item.text() if name_item else ""
-                var_value_str = val_item.text() if val_item else "0"
+
+                # Skip incomplete rows
+                if name_item is None or val_item is None:
+                    continue
+                var_name_str = name_item.text().strip()
+                var_value_str = val_item.text().strip()
+                if not var_name_str or not var_value_str:
+                    continue
+
                 var_names[row] = var_name_str
                 code_line = f"{var_name_str} = {var_value_str}"
                 try:
                     exec(code_line)
                     exec(f"var_values[row] = {var_name_str}")
-                except:
+                except Exception as e:
                     run_cond = True
                     error_count += 1
-                    print(f"Error n°{error_count} while resolving row {row}: {code_line}")
+                    print(f"Error n°{error_count} while resolving row {row}: {code_line} → {e}")
 
         return var_values
 
@@ -124,17 +127,24 @@ class VarLogic:
             for row in range(row_count):
                 name_item = self.table.item(row, 0)
                 val_item = self.table.item(row, 1)
-                var_name_str = name_item.text() if name_item else ""
-                var_value_str = val_item.text() if val_item else "0"
+
+                # Skip incomplete rows
+                if name_item is None or val_item is None:
+                    continue
+                var_name_str = name_item.text().strip()
+                var_value_str = val_item.text().strip()
+                if not var_name_str or not var_value_str:
+                    continue
+
                 var_names[row] = var_name_str
                 code_line = f"{var_name_str} = {var_value_str}"
                 try:
                     exec(code_line)
                     exec(f"var_values[row] = {var_name_str}")
-                except:
+                except Exception as e:
                     run_cond = True
                     error_count += 1
-                    print(f"Cannot resolve row {row}, swapping with row {row + 1}")
+                    print(f"Error n°{error_count} while resolving row {row}: {code_line} → {e}")
                     if row < row_count - 1:
                         self.swap_vars(row, row + 1)
 
