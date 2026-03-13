@@ -197,7 +197,7 @@ class SequenceLogic:
         for i in range(len(all_IO_states)):
             if point_trigger_channel != -1 and i == point_trigger_channel:
                 final_patterns[i] = self.pattern_calculator(point_trigger_timings, point_trigger_IO)
-            elif i == sequence_trigger_channel:
+            elif sequence_trigger_channel != -1 and i == sequence_trigger_channel:
                 final_patterns[i] = self.pattern_calculator(sequence_trigger_timings, sequence_trigger_IO)
             else:
                 final_patterns[i] = self.pattern_calculator(all_pulse_durations, all_IO_states[i])

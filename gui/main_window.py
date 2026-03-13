@@ -23,6 +23,8 @@ class MainWindow(QtWidgets.QMainWindow):
         # Init UI
         self.ui.comboBox_trigger_per_point_channel.addItems(CHANNEL_LABELS)
         self.ui.comboBox_trigger_per_sequence_channel.addItems(CHANNEL_LABELS)
+        self.ui.comboBox_trigger_per_sequence_channel.setCurrentIndex(9)
+        self.ui.comboBox_trigger_per_point_channel.setCurrentIndex(2)
 
         # Init logic
         self.pulse_table = PulseTableWidget(self.ui.tableWidget, [])
@@ -69,6 +71,7 @@ class MainWindow(QtWidgets.QMainWindow):
 
     def _get_sequence_params(self) -> dict:
         point_trigger_enabled = self.ui.checkBox_trigger_per_point_check.isChecked()
+        sequence_trigger_enabled = self.ui.checkBox_trigger_per_sequence_check.isChecked()
         return {
             "num_points": self.ui.spinBox_num_points.value(),
             "n_repeat": self.ui.spinBox_n_repeat.value(),
@@ -77,7 +80,8 @@ class MainWindow(QtWidgets.QMainWindow):
             "point_trigger_channel": self.ui.comboBox_trigger_per_point_channel.currentIndex()
             if point_trigger_enabled else -1,
             "point_trigger_duration": self.ui.spinBox_trigger_per_point_duration.value(),
-            "sequence_trigger_channel": self.ui.comboBox_trigger_per_sequence_channel.currentIndex(),
+            "sequence_trigger_channel": self.ui.comboBox_trigger_per_sequence_channel.currentIndex()
+            if sequence_trigger_enabled else -1,
             "sequence_trigger_duration": self.ui.spinBox_trigger_per_sequence_duration.value(),
         }
 
