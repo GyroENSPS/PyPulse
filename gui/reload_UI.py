@@ -17,8 +17,8 @@ except subprocess.CalledProcessError as e:
     print("❌ Erreur lors de la conversion du fichier .ui")
     print(e)
 
-# not necessary if ressources.py is in the same folder as the ui.py
-'''
+# end not necessary if ressources.py is in the same folder as the ui.py
+
 try:
     with open(py_file, "r", encoding="utf-8") as f:
         content = f.read()
@@ -26,7 +26,7 @@ try:
     # Remplacement de l’import
     content = content.replace(
         "import resources_rc",
-        "from ui_files import resources_rc"
+        "from gui.ui_files.py_files import resources_rc"
     )
 
     with open(py_file, "w", encoding="utf-8") as f:
@@ -37,4 +37,4 @@ try:
 except Exception as e:
     print("❌ Erreur lors de la modification du fichier généré")
     print(e)
-'''
+

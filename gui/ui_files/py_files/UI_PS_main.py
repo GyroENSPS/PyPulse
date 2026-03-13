@@ -461,7 +461,7 @@ class Ui_MainWindow(object):
         self.actionSave_pulse_config.setText(_translate("MainWindow", "Save pulse configuration"))
         self.actionLoad_pulse_configuration.setText(_translate("MainWindow", "Load pulse configuration"))
 from pyqtgraph import PlotWidget
-import resources_rc
+from gui.ui_files.py_files import resources_rc
 
 
 if __name__ == "__main__":
