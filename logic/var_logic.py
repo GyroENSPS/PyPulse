@@ -103,7 +103,7 @@ class VarLogic:
                 except:
                     run_cond = True
                     error_count += 1
-                    print(f"Error resolving row {row}: {code_line}")
+                    print(f"Error n°{error_count} while resolving row {row}: {code_line}")
 
         return var_values
 
