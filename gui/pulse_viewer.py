@@ -24,6 +24,35 @@ class PulseViewer:
         """plot_widget : the pyqtgraph PlotWidget from the UI (self.ui.pulse_view)."""
         self.plot = plot_widget
 
+    def plot_sequence(self, final_patterns: list, plot_widget):
+        """
+        Affiche la séquence complète dans le widget du second onglet.
+        final_patterns : liste de listes de tuples (duration, value)
+        """
+        plot_widget.clear()
+        plot_offset = -2.1
+
+        for i, pattern in enumerate(final_patterns):
+            if pattern is None:
+                continue
+            io_vals = [t[1] for t in pattern]
+            durations = [t[0] for t in pattern]
+            timings = [sum(durations[:j // 2]) for j in range(len(durations) * 2 + 1)]
+
+            io_plot = [io_vals[j // 2] + i * plot_offset for j in range(len(io_vals) * 2)]
+            io_plot.append(io_plot[-1])
+            io_plot = io_plot[-1:] + io_plot[:-1]  # rotate -1
+
+            fill_color = QColor(CHANNEL_COLORS[i])
+            fill_color.setAlphaF(0.2)
+
+            plot_widget.plot(
+                timings, io_plot,
+                pen=pyqtgraph.mkPen(color=CHANNEL_COLORS[i], width=2),
+                brush=fill_color,
+                fillLevel=i * plot_offset
+            )
+
     def plot_pattern(self, pulse_durations: np.ndarray, IO_matrix: np.ndarray,
                      variable_index: list, min_val: float = 0, max_val: float = 0):
         """

@@ -124,3 +124,88 @@ class SequenceLogic:
         """
         pulse_durations, IO_matrix, variable_index, _ = self.read_table()
         return pulse_durations, IO_matrix, variable_index
+
+    def build_measurement_sequence(self, num_points: int, n_repeat: int,
+                                   min_val: int, max_val: int,
+                                   point_trigger_channel: int,
+                                   point_trigger_duration: int,
+                                   sequence_trigger_channel: int,
+                                   sequence_trigger_duration: int) -> tuple:
+        """
+        Génère la séquence complète de mesure (balayage du paramètre variable).
+        Retourne (final_patterns, total_tuple_length, total_measurement_time).
+        """
+        pulse_durations, IO_matrix, variable_index, param_per_col = self.read_table()
+
+        # Récupère noms et instructions des variables
+        row_count = self.var_logic.table.rowCount()
+        var_names = []
+        var_instructions = []
+        var_conds_idx = []
+        for row in range(row_count):
+            name_item = self.var_logic.table.item(row, 0)
+            val_item = self.var_logic.table.item(row, 1)
+            checkbox = self.var_logic.table.cellWidget(row, 3)
+            if name_item and val_item:
+                var_names.append(name_item.text().strip())
+                var_instructions.append(val_item.text().strip())
+            else:
+                var_names.append("")
+                var_instructions.append("0")
+            from PyQt5.QtWidgets import QCheckBox
+            if isinstance(checkbox, QCheckBox) and checkbox.isChecked():
+                var_conds_idx.append(row)
+
+        meas_points = np.linspace(min_val, max_val, num_points, dtype=int)
+
+        all_pulse_durations = np.zeros(len(pulse_durations) * num_points * n_repeat)
+        point_trigger_timings = np.zeros(2 * num_points)
+        point_trigger_IO = np.zeros(2 * num_points)
+
+        for idx, point in enumerate(meas_points):
+            # Substitue le point de mesure dans les variables de balayage
+            current_instructions = list(var_instructions)
+            for i in var_conds_idx:
+                current_instructions[i] = str(point)
+
+            new_params = self.update_pulse_durations(var_names, current_instructions)
+            new_durations = np.copy(pulse_durations)
+            for col_idx, param_number in enumerate(param_per_col):
+                if param_number is not None:
+                    new_durations[col_idx] = new_params[param_number]
+
+            point_trigger_timings[idx * 2: idx * 2 + 2] = [
+                point_trigger_duration,
+                sum(new_durations) * n_repeat - point_trigger_duration
+            ]
+            point_trigger_IO[idx * 2: idx * 2 + 2] = [1, 0]
+
+            for repeat_idx in range(n_repeat):
+                first = (idx * n_repeat + repeat_idx) * len(pulse_durations)
+                last = first + len(pulse_durations)
+                all_pulse_durations[first:last] = new_durations
+
+        sequence_trigger_timings = [sequence_trigger_duration,
+                                    sum(all_pulse_durations) - sequence_trigger_duration]
+        sequence_trigger_IO = [1, 0]
+
+        all_IO_states = np.tile(IO_matrix, (1, num_points * n_repeat))
+
+        final_patterns = [None] * len(all_IO_states)
+        total_tuple_length = 0
+
+        for i in range(len(all_IO_states)):
+            if point_trigger_channel != -1 and i == point_trigger_channel:
+                final_patterns[i] = self.pattern_calculator(point_trigger_timings, point_trigger_IO)
+            elif i == sequence_trigger_channel:
+                final_patterns[i] = self.pattern_calculator(sequence_trigger_timings, sequence_trigger_IO)
+            else:
+                final_patterns[i] = self.pattern_calculator(all_pulse_durations, all_IO_states[i])
+            total_tuple_length += len(final_patterns[i])
+
+        n_average = 1  # sera passé depuis l'UI
+        total_time_ns = sum(sequence_trigger_timings)
+        total_time_s = int(total_time_ns * 1e-9)
+
+        return final_patterns, total_tuple_length, total_time_s
+

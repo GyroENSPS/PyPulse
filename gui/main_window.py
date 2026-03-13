@@ -8,6 +8,10 @@ from gui.pulse_viewer import PulseViewer
 import os
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))  # dossier de main_window.py
+CHANNEL_LABELS = ["D0", "D1", "D2", "D3", "D4", "D5", "D6", "D7", "A0", "A1"]
+
+
+
 
 
 class MainWindow(QtWidgets.QMainWindow):
@@ -15,6 +19,10 @@ class MainWindow(QtWidgets.QMainWindow):
         super().__init__()
         self.ui = Ui_MainWindow()
         self.ui.setupUi(self)
+
+        # Init UI
+        self.ui.comboBox_trigger_per_point_channel.addItems(CHANNEL_LABELS)
+        self.ui.comboBox_trigger_per_sequence_channel.addItems(CHANNEL_LABELS)
 
         # Init logic
         self.pulse_table = PulseTableWidget(self.ui.tableWidget, [])
@@ -51,10 +59,50 @@ class MainWindow(QtWidgets.QMainWindow):
         # Update plot viewer after every changes
         self.ui.tableWidget_var.cellChanged.connect(self._plot_pulse)
         self.ui.tableWidget_var.itemChanged.connect(lambda: self._plot_pulse())
+        # plot viewer for measurement sequences
+        self.ui.pushButton_pulse_sequence.clicked.connect(self._preview_sequence)
+        self.ui.pushButton_compute_sequence.clicked.connect(self._compute_sequence)
 
     def _on_var_changed(self):
         self.var_logic.update_param_names()
         self._plot_pulse()
+
+    def _get_sequence_params(self) -> dict:
+        point_trigger_enabled = self.ui.checkBox_trigger_per_point_check.isChecked()
+        return {
+            "num_points": self.ui.spinBox_num_points.value(),
+            "n_repeat": self.ui.spinBox_n_repeat.value(),
+            "min_val": self.ui.spinBox_min.value(),
+            "max_val": self.ui.spinBox_max.value(),
+            "point_trigger_channel": self.ui.comboBox_trigger_per_point_channel.currentIndex()
+            if point_trigger_enabled else -1,
+            "point_trigger_duration": self.ui.spinBox_trigger_per_point_duration.value(),
+            "sequence_trigger_channel": self.ui.comboBox_trigger_per_sequence_channel.currentIndex(),
+            "sequence_trigger_duration": self.ui.spinBox_trigger_per_sequence_duration.value(),
+        }
+
+    def _preview_sequence(self):
+        p = self._get_sequence_params()
+        final_patterns, n_tuples, total_time = self.sequence_logic.build_measurement_sequence(
+            num_points=10,  # preview rapide avec seulement 10 points
+            n_repeat=p["n_repeat"],
+            min_val=p["min_val"], max_val=p["max_val"],
+            point_trigger_channel=p["point_trigger_channel"],
+            point_trigger_duration=p["point_trigger_duration"],
+            sequence_trigger_channel=p["sequence_trigger_channel"],
+            sequence_trigger_duration=p["sequence_trigger_duration"],
+        )
+        self.pulse_viewer.plot_sequence(final_patterns, self.ui.pulse_sequence_view)
+
+    def _compute_sequence(self):
+        p = self._get_sequence_params()
+        self.ui.progressBar.setValue(0)
+        final_patterns, n_tuples, total_time = self.sequence_logic.build_measurement_sequence(**p)
+        self.ui.label_num_tupple.setText(str(n_tuples))
+        self.ui.label_total_time.setText(f"{total_time} s")
+        self.ui.progressBar.setValue(100)
+        self.pulse_viewer.plot_sequence(final_patterns, self.ui.pulse_sequence_view)
+        self.final_patterns = final_patterns  # garde en mémoire pour le streaming
 
     def _plot_pulse(self):
         pulse_durations, IO_matrix, variable_index = self.sequence_logic.export_for_viewer()

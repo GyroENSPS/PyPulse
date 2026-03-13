@@ -25,7 +25,7 @@
     <item>
      <widget class="QTabWidget" name="tabWidget">
       <property name="currentIndex">
-       <number>0</number>
+       <number>1</number>
       </property>
       <widget class="QWidget" name="tab">
        <attribute name="title">
@@ -489,7 +489,7 @@
              <number>1000000000</number>
             </property>
             <property name="value">
-             <number>1000000</number>
+             <number>10000</number>
             </property>
            </widget>
           </item>
@@ -590,7 +590,7 @@
              <string>Enabled</string>
             </property>
             <property name="checked">
-             <bool>true</bool>
+             <bool>false</bool>
             </property>
             <property name="tristate">
              <bool>false</bool>
@@ -626,7 +626,7 @@
              <number>100000000</number>
             </property>
             <property name="value">
-             <number>10000</number>
+             <number>1000</number>
             </property>
            </widget>
           </item>
@@ -672,6 +672,16 @@
            </widget>
           </item>
           <item>
+           <widget class="QCheckBox" name="checkBox_trigger_per_sequence_check">
+            <property name="text">
+             <string>Enabled</string>
+            </property>
+            <property name="checked">
+             <bool>true</bool>
+            </property>
+           </widget>
+          </item>
+          <item>
            <widget class="QLabel" name="label_16">
             <property name="text">
              <string>channel :</string>
@@ -700,7 +710,7 @@
              <number>100000000</number>
             </property>
             <property name="value">
-             <number>100000</number>
+             <number>1000</number>
             </property>
            </widget>
           </item>
