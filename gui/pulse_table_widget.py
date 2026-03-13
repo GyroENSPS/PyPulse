@@ -179,7 +179,8 @@ class PulseTableWidget:
         cols = self.table.columnCount()
         headers = [str(c) for c in range(cols)]
         for row in range(self.table.rowCount()):
-            section = self.table.verticalHeaderItem(row).text()
+            header = self.table.verticalHeaderItem(row)
+            section = header.text() if header else str(row)
             config[section] = {}
             for col in range(cols):
                 widget = self.table.cellWidget(row, col)

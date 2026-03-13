@@ -3,6 +3,9 @@ from PyQt5 import QtWidgets
 from gui.ui_files.py_files.UI_PS_main import Ui_MainWindow
 from gui.pulse_table_widget import PulseTableWidget
 from logic.var_logic import VarLogic
+import os
+
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))  # dossier de main_window.py
 
 
 class MainWindow(QtWidgets.QMainWindow):
@@ -44,28 +47,31 @@ class MainWindow(QtWidgets.QMainWindow):
 
     def _save_pulse_config(self):
         path, _ = QtWidgets.QFileDialog.getSaveFileName(
-            self, "Save pulse config", "config/", "Config files (*.cfg)"
+            self, "Save pulse config", "config/pulse_config/", "Config files (*.cfg)"
         )
         if path:
             self.pulse_table.save_config(path)
 
     def _load_pulse_config(self):
         path, _ = QtWidgets.QFileDialog.getOpenFileName(
-            self, "Load pulse config", "config/", "Config files (*.cfg)"
+            self,
+            "Load pulse config",
+            os.path.join(BASE_DIR, "..", "config", "pulse_config"),
+            "Config files (*.cfg)"
         )
         if path:
             self.pulse_table.load_config(path)
 
     def _save_var_config(self):
         path, _ = QtWidgets.QFileDialog.getSaveFileName(
-            self, "Save var config", "config/", "Config files (*.cfg)"
+            self, "Save var config", "config/var_config/", "Config files (*.cfg)"
         )
         if path:
             self.var_logic.save_config(path)
 
     def _load_var_config(self):
         path, _ = QtWidgets.QFileDialog.getOpenFileName(
-            self, "Load var config", "config/", "Config files (*.cfg)"
+            self, "Load var config", "config/var_config/", "Config files (*.cfg)"
         )
         if path:
             self.var_logic.load_config(path)

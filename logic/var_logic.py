@@ -76,23 +76,70 @@ class VarLogic:
             names.append(item.text() if item else "")
         self.pulse_table.update_combobox_items(names)
 
+    def create_python_var(self) -> list:
+        """
+        Evaluates all variable expressions using exec(), retrying up to 100 times
+        to resolve inter-variable dependencies. Returns list of values (one per row).
+        """
+        row_count = self.table.rowCount()
+        var_names = [None] * row_count
+        var_values = [None] * row_count
+
+        run_cond = True
+        error_count = 0
+
+        while run_cond and error_count < 100:
+            run_cond = False
+            for row in range(row_count):
+                name_item = self.table.item(row, 0)
+                val_item = self.table.item(row, 1)
+                var_name_str = name_item.text() if name_item else ""
+                var_value_str = val_item.text() if val_item else "0"
+                var_names[row] = var_name_str
+                code_line = f"{var_name_str} = {var_value_str}"
+                try:
+                    exec(code_line)
+                    exec(f"var_values[row] = {var_name_str}")
+                except:
+                    run_cond = True
+                    error_count += 1
+                    print(f"Error resolving row {row}: {code_line}")
+
+        return var_values
+
     def sort_and_resolve(self) -> list:
         """
-        Evaluate variable expressions in order, resolving dependencies.
-        Returns list of (name, value) pairs.
+        Sorts variable rows to resolve dependencies (bubbles unresolvable rows downward),
+        then evaluates all expressions. Updates ComboBoxes after sorting.
         """
-        names, instructions, _ = self.read_var_table()
-        context = {}
-        resolved = []
-        for name, expr in zip(names, instructions):
-            try:
-                val = eval(expr, {}, context)
-                context[name] = val
-                resolved.append((name, val))
-            except Exception as e:
-                print(f"Error resolving '{name}' = '{expr}': {e}")
-                resolved.append((name, None))
-        return resolved
+        row_count = self.table.rowCount()
+        var_names = [None] * row_count
+        var_values = [None] * row_count
+
+        run_cond = True
+        error_count = 0
+
+        while run_cond and error_count < 100:
+            run_cond = False
+            for row in range(row_count):
+                name_item = self.table.item(row, 0)
+                val_item = self.table.item(row, 1)
+                var_name_str = name_item.text() if name_item else ""
+                var_value_str = val_item.text() if val_item else "0"
+                var_names[row] = var_name_str
+                code_line = f"{var_name_str} = {var_value_str}"
+                try:
+                    exec(code_line)
+                    exec(f"var_values[row] = {var_name_str}")
+                except:
+                    run_cond = True
+                    error_count += 1
+                    print(f"Cannot resolve row {row}, swapping with row {row + 1}")
+                    if row < row_count - 1:
+                        self.swap_vars(row, row + 1)
+
+        self.update_param_names()
+        return var_values
 
     def swap_vars(self, row_a: int, row_b: int):
         """Swap two rows in the variable table."""

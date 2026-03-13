@@ -381,7 +381,7 @@
              <item>
               <widget class="QTableWidget" name="tableWidget_var">
                <property name="rowCount">
-                <number>1</number>
+                <number>0</number>
                </property>
                <property name="columnCount">
                 <number>4</number>
@@ -389,7 +389,6 @@
                <attribute name="verticalHeaderVisible">
                 <bool>false</bool>
                </attribute>
-               <row/>
                <column>
                 <property name="text">
                  <string>name</string>

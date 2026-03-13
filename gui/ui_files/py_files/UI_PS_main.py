@@ -155,7 +155,7 @@ class Ui_MainWindow(object):
         self.horizontalLayout_4.addWidget(self.pushButton_sort_py_vars)
         self.verticalLayout.addLayout(self.horizontalLayout_4)
         self.tableWidget_var = QtWidgets.QTableWidget(self.layoutWidget1)
-        self.tableWidget_var.setRowCount(1)
+        self.tableWidget_var.setRowCount(0)
         self.tableWidget_var.setColumnCount(4)
         self.tableWidget_var.setObjectName("tableWidget_var")
         item = QtWidgets.QTableWidgetItem()
