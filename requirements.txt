@@ -1,0 +1,4 @@
+pulsestreamer
+PyQt5
+pyqtgraph
+numpy
