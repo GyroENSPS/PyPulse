@@ -1,0 +1,23 @@
+<RCC>
+  <qresource prefix="/icons">
+    <file>icons/invert_row_neg.png</file>
+    <file>icons/add_col_left_neg.png</file>
+    <file>icons/add_col_right.png_neg.png</file>
+    <file>icons/delete_col_neg.png</file>
+    <file>icons/load_config_neg.png</file>
+    <file>icons/move_col_left_neg.png</file>
+    <file>icons/move_col_right_neg.png</file>
+    <file>icons/save_config_neg.png</file>
+    <file>icons/swap_rows_neg.png</file>
+    <file>icons/load_config.png</file>
+    <file>icons/save_config.png</file>
+    <file>icons/swap_rows.png</file>
+    <file>icons/invert_row.png</file>
+    <file>icons/delete_col.png</file>
+    <file>icons/add_col_left.png</file>
+    <file>icons/move_col_left.png</file>
+    <file>icons/move_col_right.png</file>
+    <file>icons/add_col_right.png.png</file>
+    <file>icons/main_icon.ico</file>
+  </qresource>
+</RCC>
