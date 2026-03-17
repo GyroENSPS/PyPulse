@@ -27,7 +27,7 @@ class MainWindow(QtWidgets.QMainWindow):
         # Init UI
         self.ui.comboBox_trigger_per_point_channel.addItems(CHANNEL_LABELS)
         self.ui.comboBox_trigger_per_sequence_channel.addItems(CHANNEL_LABELS)
-        self.ui.comboBox_trigger_per_sequence_channel.setCurrentIndex(9)
+        self.ui.comboBox_trigger_per_sequence_channel.setCurrentIndex(3)
         self.ui.comboBox_trigger_per_point_channel.setCurrentIndex(2)
 
         # Init logic
@@ -88,12 +88,39 @@ class MainWindow(QtWidgets.QMainWindow):
         self.ui.pushButton_PS_reset.clicked.connect(self._stop_stream)
         self.ui.pushButton_PS_run_N_times.clicked.connect(self._run_n_times)
 
+    def _compute_sequence(self):
+        p = self._get_sequence_params()
+        self.ui.progressBar.setValue(0)
+        final_patterns, n_tuples = self.sequence_logic.build_measurement_sequence(**p)
+        self.ui.label_num_tupple.setText(str(n_tuples))
+        self.ui.progressBar.setValue(100)
+        self.pulse_viewer.plot_sequence(final_patterns, self.ui.pulse_sequence_view)
+        self.final_patterns = final_patterns
+
+        # Export summary
+        import os
+        from datetime import datetime
+        export_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)),
+                                  "..", "sequences")
+        os.makedirs(export_dir, exist_ok=True)
+        path = os.path.join(export_dir, "last_measurement_sequence.txt")
+        self.sequence_logic.export_sequence_summary(
+            final_patterns,
+            num_points=p["num_points"],
+            n_repeat=p["n_repeat"],
+            min_val=p["min_val"],
+            max_val=p["max_val"],
+            path=path
+        )
+
     def _run_continuous(self):
         if not hasattr(self, "final_patterns") or self.final_patterns is None:
             print("No sequence computed yet.")
             return
+        self.ps_driver.connect()
         if not self.ps_driver.is_connected():
-            self.ps_driver.connect()
+            print("Cannot stream: PulseStreamer not connected.")
+            return
         sequence = self.sequence_builder.build(self.final_patterns)
         self.ps_driver.stream_infinite(sequence)
 
@@ -101,8 +128,10 @@ class MainWindow(QtWidgets.QMainWindow):
         if not hasattr(self, "final_patterns") or self.final_patterns is None:
             print("No sequence computed yet.")
             return
+        self.ps_driver.connect()
         if not self.ps_driver.is_connected():
-            self.ps_driver.connect()
+            print("Cannot stream: PulseStreamer not connected.")
+            return
         n = self.ui.spinBox_n_average.value()
         sequence = self.sequence_builder.build(self.final_patterns)
         self.ps_driver.stream_n_times(sequence, n)
@@ -133,7 +162,7 @@ class MainWindow(QtWidgets.QMainWindow):
 
     def _preview_sequence(self):
         p = self._get_sequence_params()
-        final_patterns, n_tuples, total_time = self.sequence_logic.build_measurement_sequence(
+        final_patterns, n_tuples = self.sequence_logic.build_measurement_sequence(
             num_points=10,  # preview rapide avec seulement 10 points
             n_repeat=p["n_repeat"],
             min_val=p["min_val"], max_val=p["max_val"],
@@ -143,16 +172,6 @@ class MainWindow(QtWidgets.QMainWindow):
             sequence_trigger_duration=p["sequence_trigger_duration"],
         )
         self.pulse_viewer.plot_sequence(final_patterns, self.ui.pulse_sequence_view)
-
-    def _compute_sequence(self):
-        p = self._get_sequence_params()
-        self.ui.progressBar.setValue(0)
-        final_patterns, n_tuples, total_time = self.sequence_logic.build_measurement_sequence(**p)
-        self.ui.label_num_tupple.setText(str(n_tuples))
-        self.ui.label_total_time.setText(f"{total_time} s")
-        self.ui.progressBar.setValue(100)
-        self.pulse_viewer.plot_sequence(final_patterns, self.ui.pulse_sequence_view)
-        self.final_patterns = final_patterns  # garde en mémoire pour le streaming
 
     def _plot_pulse(self):
         if not hasattr(self, "sequence_logic") or not hasattr(self, "pulse_viewer"):

@@ -707,10 +707,10 @@
           <item>
            <widget class="QSpinBox" name="spinBox_trigger_per_sequence_duration">
             <property name="maximum">
-             <number>100000000</number>
+             <number>1000000000</number>
             </property>
             <property name="value">
-             <number>1000</number>
+             <number>1000000000</number>
             </property>
            </widget>
           </item>

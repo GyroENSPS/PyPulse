@@ -185,9 +185,18 @@ class SequenceLogic:
                 last = first + len(pulse_durations)
                 all_pulse_durations[first:last] = new_durations
 
-        sequence_trigger_timings = [sequence_trigger_duration,
-                                    sum(all_pulse_durations) - sequence_trigger_duration]
-        sequence_trigger_IO = [1, 0]
+        half = sequence_trigger_duration // 2
+
+        # Préambule : toutes les voies à 0 sauf le trigger de séquence
+        preamble_duration = sequence_trigger_duration
+        # Le trigger séquence fait 0 pendant half, puis 1 pendant half
+        sequence_trigger_preamble = [(half, 0), (half, 1)]
+        # Les autres voies sont à 0 pendant tout le préambule
+        silent_preamble = [(preamble_duration, 0)]
+
+        # Séquence principale : trigger séquence reste à 0
+        sequence_trigger_timings = [sum(all_pulse_durations)]
+        sequence_trigger_IO = [0]
 
         all_IO_states = np.tile(IO_matrix, (1, num_points * n_repeat))
 
@@ -195,17 +204,136 @@ class SequenceLogic:
         total_tuple_length = 0
 
         for i in range(len(all_IO_states)):
+            # Partie principale
             if point_trigger_channel != -1 and i == point_trigger_channel:
-                final_patterns[i] = self.pattern_calculator(point_trigger_timings, point_trigger_IO)
+                main_pattern = self.pattern_calculator(point_trigger_timings, point_trigger_IO)
             elif sequence_trigger_channel != -1 and i == sequence_trigger_channel:
-                final_patterns[i] = self.pattern_calculator(sequence_trigger_timings, sequence_trigger_IO)
+                main_pattern = self.pattern_calculator(sequence_trigger_timings, sequence_trigger_IO)
             else:
-                final_patterns[i] = self.pattern_calculator(all_pulse_durations, all_IO_states[i])
+                main_pattern = self.pattern_calculator(all_pulse_durations, all_IO_states[i])
+
+            # Préambule
+            if sequence_trigger_channel != -1 and i == sequence_trigger_channel:
+                preamble = sequence_trigger_preamble
+            else:
+                preamble = silent_preamble
+
+            # Concaténation préambule + séquence principale
+            final_patterns[i] = preamble + main_pattern
             total_tuple_length += len(final_patterns[i])
 
-        n_average = 1  # sera passé depuis l'UI
-        total_time_ns = sum(sequence_trigger_timings)
-        total_time_s = int(total_time_ns * 1e-9)
+        return final_patterns, total_tuple_length
 
-        return final_patterns, total_tuple_length, total_time_s
+    def export_sequence_summary(self, final_patterns: list, num_points: int, n_repeat: int,
+                                min_val: int, max_val: int, path: str):
+        """
+        Generates a .txt summary file with:
+        - Measurement points list
+        - Repetitions per point
+        - ASCII waveform diagram for one measurement point
+        - Variable table
+        """
+        from gui.pulse_viewer import CHANNEL_LABELS
+
+        pulse_durations, IO_matrix, variable_index, param_per_col = self.read_table()
+        meas_points = list(range(min_val, max_val + 1,
+                                 max(1, (max_val - min_val) // max(1, num_points - 1))))[:num_points]
+
+        lines = []
+
+        # --- Header ---
+        lines.append("=" * 60)
+        lines.append("  PyPulse — Sequence Summary")
+        lines.append("=" * 60)
+        lines.append("")
+
+        # --- Measurement points ---
+        lines.append("[ Measurement Points ]")
+        lines.append(f"  Min        : {min_val} ns")
+        lines.append(f"  Max        : {max_val} ns")
+        lines.append(f"  Num points : {num_points}")
+        lines.append(f"  Points     : {meas_points}")
+        lines.append("")
+
+        # --- Repetitions ---
+        lines.append("[ Repetitions ]")
+        lines.append(f"  Repetitions per point : {n_repeat}")
+        lines.append(f"  Total acquisitions    : {num_points * n_repeat}")
+        lines.append("")
+
+        # --- Variable table ---
+        lines.append("[ Variables ]")
+        lines.append(f"  {'Name':<15} {'Expression':<20} {'Sweep'}")
+        lines.append(f"  {'-' * 15} {'-' * 20} {'-' * 5}")
+        row_count = self.var_logic.table.rowCount()
+        for row in range(row_count):
+            name_item = self.var_logic.table.item(row, 0)
+            val_item = self.var_logic.table.item(row, 1)
+            checkbox = self.var_logic.table.cellWidget(row, 3)
+            from PyQt5.QtWidgets import QCheckBox
+            name = name_item.text() if name_item else ""
+            expr = val_item.text() if val_item else ""
+            sweep = "yes" if isinstance(checkbox, QCheckBox) and checkbox.isChecked() else "no"
+            if name:
+                lines.append(f"  {name:<15} {expr:<20} {sweep}")
+        lines.append("")
+
+        # --- ASCII waveform for one point ---
+        lines.append("[ Pulse Diagram — one measurement point ]")
+        lines.append("")
+
+        cols = len(pulse_durations)
+        # Normalize durations to ASCII widths (min 3, max 12 chars per segment)
+        max_dur = max(pulse_durations) if max(pulse_durations) > 0 else 1
+        col_widths = [max(3, min(12, int(d / max_dur * 10))) for d in pulse_durations]
+
+        # Header: duration row
+        dur_row = "  Duration |"
+        for col, d in enumerate(pulse_durations):
+            w = col_widths[col]
+            var_idx = param_per_col[col]
+            var_name_item = self.var_logic.table.item(var_idx, 0) if var_idx is not None else None
+            var_name = var_name_item.text() if var_name_item else str(int(d))
+            txt = var_name[:w].center(w)
+            dur_row += txt + "|"
+
+        # One row per channel
+        for ch in range(len(IO_matrix)):
+            label = CHANNEL_LABELS[ch] if ch < len(CHANNEL_LABELS) else f"CH{ch}"
+            row_str = f"  {label:<8} |"
+            for col in range(cols):
+                w = col_widths[col]
+                val = IO_matrix[ch][col]
+                if val == 1:
+                    block = ("T" * (w - 2)).center(w)
+                elif val == 0:
+                    block = (" " * (w - 2)).center(w)
+                else:
+                    # Analog: show value
+                    block = f"{val:.1f}".center(w)
+                row_str += block + "|"
+            # Mark variable columns
+            if any(IO_matrix[ch][v] != IO_matrix[ch][0] for v in variable_index):
+                row_str += "  ← sweep"
+            lines.append(row_str)
+
+        lines.append("  " + "-" * (len(dur_row) - 2))
+
+        # Variable region marker
+        if variable_index:
+            marker = "  Sweep col |"
+            for col in range(cols):
+                w = col_widths[col]
+                marker += ("^^^" if col in variable_index else " " * w).center(w) + "|"
+            lines.append(marker)
+
+        lines.append("")
+        lines.append("=" * 60)
+
+        # --- Write file ---
+        with open(path, "w", encoding="utf-8") as f:
+            f.write("\n".join(lines))
+
+        print(f"Summary exported to {path}")
+
 
