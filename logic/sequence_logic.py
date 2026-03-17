@@ -284,8 +284,12 @@ class SequenceLogic:
 
         cols = len(pulse_durations)
         # Normalize durations to ASCII widths (min 3, max 12 chars per segment)
-        max_dur = max(pulse_durations) if max(pulse_durations) > 0 else 1
-        col_widths = [max(3, min(12, int(d / max_dur * 10))) for d in pulse_durations]
+        col_widths = []
+        for col in range(cols):
+            var_idx = param_per_col[col]
+            var_name_item = self.var_logic.table.item(var_idx, 0) if var_idx is not None else None
+            var_name = var_name_item.text() if var_name_item else str(int(pulse_durations[col]))
+            col_widths.append(max(len(var_name) + 2, 5))
 
         # Header: duration row
         dur_row = "  Duration |"
@@ -296,6 +300,9 @@ class SequenceLogic:
             var_name = var_name_item.text() if var_name_item else str(int(d))
             txt = var_name[:w].center(w)
             dur_row += txt + "|"
+
+        lines.append(dur_row)
+        lines.append("  " + "-" * (len(dur_row) - 2))
 
         # One row per channel
         for ch in range(len(IO_matrix)):
@@ -317,7 +324,6 @@ class SequenceLogic:
                 row_str += "  ← sweep"
             lines.append(row_str)
 
-        lines.append("  " + "-" * (len(dur_row) - 2))
 
         # Variable region marker
         if variable_index:
