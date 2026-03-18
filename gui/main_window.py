@@ -52,6 +52,9 @@ class MainWindow(QtWidgets.QMainWindow):
         self.sequence_builder = SequenceBuilder(self.ps_driver)
         self.sequence_builder = SequenceBuilder(self.ps_driver)
 
+        self.ui.pulse_sequence_view.setDownsampling(auto=True, mode="subsample")
+        self.ui.pulse_sequence_view.setClipToView(True)
+
         self._connect_signals()
 
     def _connect_signals(self):
