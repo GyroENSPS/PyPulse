@@ -143,7 +143,7 @@ PyPulse/
 PyPulse starts a TCP server on `localhost:5025` at launch.
 You can control it from any Python script or Jupyter notebook using `client.py`.
 
-### Quick start
+### Example
 
 ```python
 import sys
@@ -155,51 +155,8 @@ ps.connect()
 
 print(ps.idn())        # PyPulse,1.0
 
-# Configure sweep
-ps.set_min(0)
-ps.set_max(2_000_000)
-ps.set_num_points(50)
-ps.set_n_repeat(10)
-
-# Update a variable expression
-ps.set_var("tau", "500000")
-ps.set_var("t_pi", "tau / 2")
-
-# Load a saved configuration
-ps.load_pulse_config("config/pulse_config/rabi.cfg")
-ps.load_var_config("config/var_config/rabi_vars.cfg")
-
-# Compute and stream
 ps.compute_sequence()
-ps.run_continuous()
 
-# Stop
-ps.stop()
-ps.disconnect()
-```
-
-### Ramsey example (Jupyter notebook)
-
-```python
-from client import PyPulseClient
-import time
-
-ps = PyPulseClient()
-ps.connect()
-
-ps.load_pulse_config("config/pulse_config/ramsey.cfg")
-ps.load_var_config("config/var_config/ramsey_vars.cfg")
-
-for tau_ns in range(0, 5_000_000, 100_000):
-    ps.set_var("tau", str(tau_ns))
-    ps.set_min(tau_ns)
-    ps.set_max(tau_ns)
-    ps.set_num_points(1)
-    ps.compute_sequence()
-    ps.run_n_times()
-    time.sleep(0.5)
-
-ps.stop()
 ps.disconnect()
 ```
 
