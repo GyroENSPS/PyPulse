@@ -29,8 +29,7 @@ class PulseViewer:
         """
         Affiche la séquence complète dans le widget du second onglet.
         final_patterns : liste de listes de tuples (duration, value)
-        Utilise numpy pour la vectorisation et applique un downsampling
-        si la séquence dépasse MAX_DISPLAY_POINTS points.
+        Applique un downsampling si la séquence dépasse MAX_DISPLAY_POINTS points.
         """
         plot_widget.clear()
         plot_offset = -2.1
@@ -38,30 +37,13 @@ class PulseViewer:
         for i, pattern in enumerate(final_patterns):
             if pattern is None:
                 continue
+            io_vals = [t[1] for t in pattern]
+            durations = [t[0] for t in pattern]
+            timings = [sum(durations[:j // 2]) for j in range(len(durations) * 2 + 1)]
 
-            durations_arr = np.array([t[0] for t in pattern], dtype=float)
-            io_vals_arr   = np.array([t[1] for t in pattern], dtype=float)
-
-            # Timings vectorisés : sur-échantillonnage ×2 pour rendu en marche d'escalier
-            cumsum = np.concatenate([[0.0], np.cumsum(durations_arr)])
-            n = len(cumsum)
-            if n >= 2:
-                timings = np.empty(2 * n - 1)
-                timings[0::2] = cumsum
-                timings[1::2] = cumsum[1:]
-            else:
-                timings = cumsum
-
-            # io_plot vectorisé + offset canal
-            io_repeated = np.repeat(io_vals_arr, 2) + i * plot_offset
-            io_plot = np.empty(len(io_repeated) + 1)
-            io_plot[1:] = io_repeated
-            io_plot[0]  = io_repeated[-1]  # rotate -1
-
-            # Assurer la même longueur
-            min_len = min(len(timings), len(io_plot))
-            timings = timings[:min_len]
-            io_plot = io_plot[:min_len]
+            io_plot = [io_vals[j // 2] + i * plot_offset for j in range(len(io_vals) * 2)]
+            io_plot.append(io_plot[-1])
+            io_plot = io_plot[-1:] + io_plot[:-1]  # rotate -1
 
             # Downsampling si trop de points
             if len(timings) > MAX_DISPLAY_POINTS:
