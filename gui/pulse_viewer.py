@@ -16,7 +16,6 @@ CHANNEL_COLORS = [
                     ]
 CHANNEL_LABELS = ["D0", "D1", "D2", "D3", "D4", "D5", "D6", "D7", "A0", "A1"]
 PLOT_OFFSET = -2.1
-MAX_DISPLAY_POINTS = 5000
 
 
 class PulseViewer:
@@ -27,9 +26,9 @@ class PulseViewer:
 
     def plot_sequence(self, final_patterns: list, plot_widget):
         """
-        Affiche la séquence complète dans le widget du second onglet.
+        Affiche la séquence dans le widget du second onglet.
         final_patterns : liste de listes de tuples (duration, value)
-        Applique un downsampling si la séquence dépasse MAX_DISPLAY_POINTS points.
+        Ne doit être appelée qu'avec un nombre limité de points (ex. 10).
         """
         plot_widget.clear()
         plot_offset = -2.1
@@ -44,12 +43,6 @@ class PulseViewer:
             io_plot = [io_vals[j // 2] + i * plot_offset for j in range(len(io_vals) * 2)]
             io_plot.append(io_plot[-1])
             io_plot = io_plot[-1:] + io_plot[:-1]  # rotate -1
-
-            # Downsampling si trop de points
-            if len(timings) > MAX_DISPLAY_POINTS:
-                step = max(1, len(timings) // MAX_DISPLAY_POINTS)
-                timings = timings[::step]
-                io_plot = io_plot[::step]
 
             fill_color = QColor(CHANNEL_COLORS[i])
             fill_color.setAlphaF(0.2)

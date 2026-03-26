@@ -17,7 +17,7 @@ CHANNEL_LABELS = ["D0", "D1", "D2", "D3", "D4", "D5", "D6", "D7", "A0", "A1"]
 
 
 class SequenceWorker(QThread):
-    """Worker thread pour le calcul de la séquence de mesure.
+    """Worker thread pour le calcul complet de la séquence de mesure.
     Évite de bloquer le thread UI lors de séquences longues.
     """
     result_ready = pyqtSignal(list, int)
@@ -127,11 +127,12 @@ class MainWindow(QtWidgets.QMainWindow):
         self.ui.label_num_tupple.setText(str(n_tuples))
         self.ui.progressBar.setValue(100)
         self.ui.pushButton_compute_sequence.setEnabled(True)
-        self.pulse_viewer.plot_sequence(final_patterns, self.ui.pulse_sequence_view)
         self.final_patterns = final_patterns
 
+        # Affichage : toujours un preview à 10 points, jamais la séquence complète
+        self._preview_sequence()
+
         # Export summary
-        from datetime import datetime
         export_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)),
                                   "..", "sequences")
         os.makedirs(export_dir, exist_ok=True)
