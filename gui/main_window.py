@@ -1,5 +1,6 @@
 import sys
 from PyQt5 import QtWidgets
+from PyQt5.QtCore import QThread, pyqtSignal
 from gui.ui_files.py_files.UI_PS_main import Ui_MainWindow
 from gui.pulse_table_widget import PulseTableWidget
 from logic.var_logic import VarLogic
@@ -15,7 +16,24 @@ BASE_DIR = os.path.dirname(os.path.abspath(__file__))  # dossier de main_window.
 CHANNEL_LABELS = ["D0", "D1", "D2", "D3", "D4", "D5", "D6", "D7", "A0", "A1"]
 
 
+class SequenceWorker(QThread):
+    """Worker thread pour le calcul de la séquence de mesure.
+    Évite de bloquer le thread UI lors de séquences longues.
+    """
+    result_ready = pyqtSignal(list, int)
+    error_occurred = pyqtSignal(str)
 
+    def __init__(self, sequence_logic, params):
+        super().__init__()
+        self.sequence_logic = sequence_logic
+        self.params = params
+
+    def run(self):
+        try:
+            final_patterns, n_tuples = self.sequence_logic.build_measurement_sequence(**self.params)
+            self.result_ready.emit(final_patterns, n_tuples)
+        except Exception as e:
+            self.error_occurred.emit(str(e))
 
 
 class MainWindow(QtWidgets.QMainWindow):
@@ -35,7 +53,7 @@ class MainWindow(QtWidgets.QMainWindow):
         self.var_logic   = VarLogic(self.ui.tableWidget_var, self.pulse_table)
         self.sequence_logic = SequenceLogic(self.pulse_table, self.var_logic)
         self.pulse_viewer = PulseViewer(self.ui.pulse_view)
-
+        self._sequence_worker = None
 
         # Init PulseStreamer
         BASE_DIR = os.path.dirname(os.path.abspath(__file__))
@@ -92,16 +110,27 @@ class MainWindow(QtWidgets.QMainWindow):
         self.ui.pushButton_PS_run_N_times.clicked.connect(self._run_n_times)
 
     def _compute_sequence(self):
+        # Empêcher un double-clic pendant le calcul
+        if self._sequence_worker is not None and self._sequence_worker.isRunning():
+            return
+
         p = self._get_sequence_params()
         self.ui.progressBar.setValue(0)
-        final_patterns, n_tuples = self.sequence_logic.build_measurement_sequence(**p)
+        self.ui.pushButton_compute_sequence.setEnabled(False)
+
+        self._sequence_worker = SequenceWorker(self.sequence_logic, p)
+        self._sequence_worker.result_ready.connect(lambda fp, nt: self._on_sequence_ready(fp, nt, p))
+        self._sequence_worker.error_occurred.connect(self._on_sequence_error)
+        self._sequence_worker.start()
+
+    def _on_sequence_ready(self, final_patterns, n_tuples, p):
         self.ui.label_num_tupple.setText(str(n_tuples))
         self.ui.progressBar.setValue(100)
+        self.ui.pushButton_compute_sequence.setEnabled(True)
         self.pulse_viewer.plot_sequence(final_patterns, self.ui.pulse_sequence_view)
         self.final_patterns = final_patterns
 
         # Export summary
-        import os
         from datetime import datetime
         export_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)),
                                   "..", "sequences")
@@ -115,6 +144,11 @@ class MainWindow(QtWidgets.QMainWindow):
             max_val=p["max_val"],
             path=path
         )
+
+    def _on_sequence_error(self, error_msg):
+        self.ui.pushButton_compute_sequence.setEnabled(True)
+        self.ui.progressBar.setValue(0)
+        QtWidgets.QMessageBox.critical(self, "Erreur de calcul", f"Échec du calcul de la séquence :\n{error_msg}")
 
     def _run_continuous(self):
         if not hasattr(self, "final_patterns") or self.final_patterns is None:
