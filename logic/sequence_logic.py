@@ -135,6 +135,10 @@ class SequenceLogic:
         """
         Génère la séquence complète de mesure (balayage du paramètre variable).
         Retourne (final_patterns, total_tuple_length, total_measurement_time).
+
+        insert_point_trigger=False : le trigger de point overlape les autres canaux (comportement actuel).
+        insert_point_trigger=True  : le trigger est inséré avant chaque point, les autres canaux sont à 0
+                                     pendant point_trigger_duration.
         """
         pulse_durations, IO_matrix, variable_index, param_per_col = self.read_table()
 
@@ -159,32 +163,75 @@ class SequenceLogic:
 
         meas_points = np.linspace(min_val, max_val, num_points, dtype=int)
 
-        all_pulse_durations = np.zeros(len(pulse_durations) * num_points * n_repeat)
-        point_trigger_timings = np.zeros(2 * num_points)
-        point_trigger_IO = np.zeros(2 * num_points)
-
-        for idx, point in enumerate(meas_points):
-            # Substitue le point de mesure dans les variables de balayage
+        # Pré-calcul des durées résolues pour chaque point de mesure
+        all_new_durations = []
+        for point in meas_points:
             current_instructions = list(var_instructions)
             for i in var_conds_idx:
                 current_instructions[i] = str(point)
-
             new_params = self.update_pulse_durations(var_names, current_instructions)
             new_durations = np.copy(pulse_durations)
             for col_idx, param_number in enumerate(param_per_col):
                 if param_number is not None:
                     new_durations[col_idx] = new_params[param_number]
+            all_new_durations.append(new_durations)
 
-            point_trigger_timings[idx * 2: idx * 2 + 2] = [
-                point_trigger_duration,
-                sum(new_durations) * n_repeat - point_trigger_duration
-            ]
-            point_trigger_IO[idx * 2: idx * 2 + 2] = [1, 0]
+        n_ch   = len(IO_matrix)
+        n_cols = len(pulse_durations)
 
-            for repeat_idx in range(n_repeat):
-                first = (idx * n_repeat + repeat_idx) * len(pulse_durations)
-                last = first + len(pulse_durations)
-                all_pulse_durations[first:last] = new_durations
+        if not insert_point_trigger or point_trigger_channel == -1:
+            # ── MODE OVERLAP (comportement actuel) ──────────────────────────────
+            # Le trigger de point overlape la séquence sur son propre canal.
+            all_pulse_durations   = np.zeros(n_cols * num_points * n_repeat)
+            point_trigger_timings = np.zeros(2 * num_points)
+            point_trigger_IO      = np.zeros(2 * num_points)
+
+            for idx, new_durations in enumerate(all_new_durations):
+                point_trigger_timings[idx * 2: idx * 2 + 2] = [
+                    point_trigger_duration,
+                    sum(new_durations) * n_repeat - point_trigger_duration
+                ]
+                point_trigger_IO[idx * 2: idx * 2 + 2] = [1, 0]
+                for repeat_idx in range(n_repeat):
+                    first = (idx * n_repeat + repeat_idx) * n_cols
+                    last  = first + n_cols
+                    all_pulse_durations[first:last] = new_durations
+
+            all_IO_states = np.tile(IO_matrix, (1, num_points * n_repeat))
+
+        else:
+            # ── MODE INSERT ─────────────────────────────────────────────────────
+            # Pour chaque point : 1 slot trig (autres canaux à 0) + n_repeat × mesure
+            total_slots = num_points * (1 + n_repeat * n_cols)
+            all_pulse_durations = np.zeros(total_slots)
+            all_IO_states       = np.zeros((n_ch, total_slots))
+            pt_timings_list = []
+            pt_io_list      = []
+
+            pos = 0
+            for new_durations in all_new_durations:
+                # Slot trigger : durée = point_trigger_duration, tous canaux à 0
+                all_pulse_durations[pos] = point_trigger_duration
+                all_IO_states[:, pos]    = 0
+                pt_timings_list.append(point_trigger_duration)
+                pt_io_list.append(1)
+                pos += 1
+
+                # n_repeat répétitions de la séquence de mesure
+                for _ in range(n_repeat):
+                    for col in range(n_cols):
+                        all_pulse_durations[pos] = new_durations[col]
+                        all_IO_states[:, pos]    = IO_matrix[:, col]
+                        pos += 1
+
+                # Trigger redescend à 0 après la mesure complète du point
+                pt_timings_list.append(sum(new_durations) * n_repeat)
+                pt_io_list.append(0)
+
+            all_pulse_durations   = all_pulse_durations[:pos]
+            all_IO_states         = all_IO_states[:, :pos]
+            point_trigger_timings = np.array(pt_timings_list)
+            point_trigger_IO      = np.array(pt_io_list)
 
         half = sequence_trigger_duration // 2
 
@@ -193,16 +240,11 @@ class SequenceLogic:
             preamble_duration = sequence_trigger_duration
         else:
             preamble_duration = 0
-            # Le trigger séquence fait 0 pendant half, puis 1 pendant half
         sequence_trigger_preamble = [(half, 0), (half, 1)]
-        # Les autres voies sont à 0 pendant tout le préambule
-        silent_preamble = [(preamble_duration, 0)]
 
         # Séquence principale : trigger séquence reste à 0
         sequence_trigger_timings = [sum(all_pulse_durations)]
         sequence_trigger_IO = [0]
-
-        all_IO_states = np.tile(IO_matrix, (1, num_points * n_repeat))
 
         final_patterns = [None] * len(all_IO_states)
         total_tuple_length = 0
@@ -287,7 +329,6 @@ class SequenceLogic:
         lines.append("")
 
         cols = len(pulse_durations)
-        # Normalize durations to ASCII widths (min 3, max 12 chars per segment)
         col_widths = []
         for col in range(cols):
             var_idx = param_per_col[col]
@@ -320,14 +361,11 @@ class SequenceLogic:
                 elif val == 0:
                     block = (" " * (w - 2)).center(w)
                 else:
-                    # Analog: show value
                     block = f"{val:.1f}".center(w)
                 row_str += block + "|"
-            # Mark variable columns
             if any(IO_matrix[ch][v] != IO_matrix[ch][0] for v in variable_index):
                 row_str += "  ← sweep"
             lines.append(row_str)
-
 
         # Variable region marker
         if variable_index:
@@ -345,5 +383,3 @@ class SequenceLogic:
             f.write("\n".join(lines))
 
         print(f"Summary exported to {path}")
-
-
