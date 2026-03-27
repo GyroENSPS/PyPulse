@@ -203,7 +203,7 @@ class MainWindow(QtWidgets.QMainWindow):
         p = self._get_sequence_params()
         final_patterns, n_tuples = self.sequence_logic.build_measurement_sequence(
             num_points=10,  # preview rapide avec seulement 10 points
-            n_repeat=p["n_repeat"],
+            n_repeat=1,
             min_val=p["min_val"], max_val=p["max_val"],
             point_trigger_channel=p["point_trigger_channel"],
             point_trigger_duration=p["point_trigger_duration"],
