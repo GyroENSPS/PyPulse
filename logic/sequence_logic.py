@@ -129,6 +129,7 @@ class SequenceLogic:
                                    min_val: int, max_val: int,
                                    point_trigger_channel: int,
                                    point_trigger_duration: int,
+                                   insert_point_trigger: bool,
                                    sequence_trigger_channel: int,
                                    sequence_trigger_duration: int) -> tuple:
         """

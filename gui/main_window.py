@@ -196,6 +196,7 @@ class MainWindow(QtWidgets.QMainWindow):
             "sequence_trigger_channel": self.ui.comboBox_trigger_per_sequence_channel.currentIndex()
             if sequence_trigger_enabled else -1,
             "sequence_trigger_duration": self.ui.spinBox_trigger_per_sequence_duration.value(),
+            "insert_point_trigger": point_trigger_enabled and self.ui.checkBox_insert_point_trig.isChecked(),
         }
 
     def _preview_sequence(self):
@@ -206,6 +207,7 @@ class MainWindow(QtWidgets.QMainWindow):
             min_val=p["min_val"], max_val=p["max_val"],
             point_trigger_channel=p["point_trigger_channel"],
             point_trigger_duration=p["point_trigger_duration"],
+            insert_point_trigger=p["insert_point_trigger"],
             sequence_trigger_channel=p["sequence_trigger_channel"],
             sequence_trigger_duration=p["sequence_trigger_duration"],
         )
