@@ -598,6 +598,16 @@
            </widget>
           </item>
           <item>
+           <widget class="QCheckBox" name="checkBox">
+            <property name="text">
+             <string>insert between points</string>
+            </property>
+            <property name="checked">
+             <bool>true</bool>
+            </property>
+           </widget>
+          </item>
+          <item>
            <widget class="QLabel" name="label_12">
             <property name="text">
              <string>channel :</string>
