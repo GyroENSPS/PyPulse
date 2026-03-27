@@ -188,8 +188,11 @@ class SequenceLogic:
         half = sequence_trigger_duration // 2
 
         # Préambule : toutes les voies à 0 sauf le trigger de séquence
-        preamble_duration = sequence_trigger_duration
-        # Le trigger séquence fait 0 pendant half, puis 1 pendant half
+        if sequence_trigger_channel != -1:
+            preamble_duration = sequence_trigger_duration
+        else:
+            preamble_duration = 0
+            # Le trigger séquence fait 0 pendant half, puis 1 pendant half
         sequence_trigger_preamble = [(half, 0), (half, 1)]
         # Les autres voies sont à 0 pendant tout le préambule
         silent_preamble = [(preamble_duration, 0)]
@@ -216,7 +219,7 @@ class SequenceLogic:
             if sequence_trigger_channel != -1 and i == sequence_trigger_channel:
                 preamble = sequence_trigger_preamble
             else:
-                preamble = silent_preamble
+                preamble = [(preamble_duration, 0)]
 
             # Concaténation préambule + séquence principale
             final_patterns[i] = preamble + main_pattern
