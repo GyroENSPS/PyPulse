@@ -9,6 +9,7 @@ from gui.pulse_viewer import PulseViewer
 from hardware.pulse_streamer import PulseStreamerDriver
 from hardware.sequence_builder import SequenceBuilder
 import configparser
+from datetime import datetime
 
 import os
 
@@ -136,7 +137,12 @@ class MainWindow(QtWidgets.QMainWindow):
         export_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)),
                                   "..", "sequences")
         os.makedirs(export_dir, exist_ok=True)
-        path = os.path.join(export_dir, "last_measurement_sequence.txt")
+        if self.ui.checkBox_autodate_lastsequence.isChecked():
+            timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+            filename = f"last_measurement_sequence_{timestamp}.txt"
+        else:
+            filename = "last_measurement_sequence.txt"
+        path = os.path.join(export_dir, filename)
         self.sequence_logic.export_sequence_summary(
             final_patterns,
             num_points=p["num_points"],

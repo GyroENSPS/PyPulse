@@ -752,6 +752,13 @@
            </widget>
           </item>
           <item>
+           <widget class="QCheckBox" name="checkBox_autodate_lastsequence">
+            <property name="text">
+             <string>add date tag to the sequence config file</string>
+            </property>
+           </widget>
+          </item>
+          <item>
            <widget class="QProgressBar" name="progressBar">
             <property name="value">
              <number>0</number>
