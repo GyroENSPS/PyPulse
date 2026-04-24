@@ -780,6 +780,20 @@
            </widget>
           </item>
           <item>
+           <widget class="QLabel" name="label_6">
+            <property name="text">
+             <string>Sequence duration :</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QLabel" name="label_sequence_duration">
+            <property name="text">
+             <string>0</string>
+            </property>
+           </widget>
+          </item>
+          <item>
            <widget class="QLabel" name="label_5">
             <property name="text">
              <string>Number of repetition:</string>

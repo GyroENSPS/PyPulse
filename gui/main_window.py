@@ -130,6 +130,21 @@ class MainWindow(QtWidgets.QMainWindow):
         self.ui.pushButton_compute_sequence.setEnabled(True)
         self.final_patterns = final_patterns
 
+        ch = next((ch for ch in final_patterns if ch is not None), None)
+        if ch is not None:
+            total_ns = sum(d for d, _ in ch)
+            if total_ns >= 1_000_000_000:
+                dur_str = f"{total_ns / 1_000_000_000:.3f} s"
+            elif total_ns >= 1_000_000:
+                dur_str = f"{total_ns / 1_000_000:.3f} ms"
+            elif total_ns >= 1_000:
+                dur_str = f"{total_ns / 1_000:.3f} µs"
+            else:
+                dur_str = f"{total_ns} ns"
+            self.ui.label_sequence_duration.setText(dur_str)
+        else:
+            self.ui.label_sequence_duration.setText("–")
+
         # Affichage : toujours un preview à 10 points, jamais la séquence complète
         self._preview_sequence()
 
