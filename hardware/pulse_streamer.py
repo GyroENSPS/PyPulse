@@ -47,7 +47,15 @@ class PulseStreamerDriver:
         self._device.stream(sequence, n)
 
     def stop(self):
-        self._device.constant()
+        try:
+            self._device.constant()
+        except Exception as e:
+            print(f"[PulseStreamer] stop failed: {e}")
+            self._device = None
 
     def reset(self):
-        self._device.reset()
+        try:
+            self._device.reset()
+        except Exception as e:
+            print(f"[PulseStreamer] reset failed: {e}")
+            self._device = None

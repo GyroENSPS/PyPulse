@@ -79,7 +79,7 @@ class CommandServer(QObject):
             return "OK"
 
         elif cmd == "RUN_N_TIMES":
-            w.ui.pushButton_run_PS_N_times.click()
+            w.ui.pushButton_PS_run_N_times.click()
             return "OK"
 
         elif cmd == "STOP":
