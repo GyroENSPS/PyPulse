@@ -38,7 +38,7 @@ cd gui/ui_files && pyrcc5 resources.qrc -o py_files/resources_rc.py
 
 | Module | Role |
 |---|---|
-| `gui/main_window.py` | Orchestrates all subsystems; owns all signal→slot connections; runs sequence computation in a background `SequenceWorker(QThread)` to avoid blocking the UI |
+| `gui/main_window.py` | Orchestrates all subsystems; owns all signal→slot connections; runs sequence computation in a background `SequenceWorker(QThread)` to avoid blocking the UI; updates `label_sequence_duration` with the formatted total duration after each successful compute |
 | `gui/pulse_table_widget.py` | Manages the pulse table widget — row 0 = `QComboBox` (duration variable selector), rows 1–8 = `QCheckBox` (digital channels D0–D7), rows 9–10 = `QTableWidgetItem` float (analog A0–A1) |
 | `gui/pulse_viewer.py` | pyqtgraph waveform display; called for both the single-pattern preview and the sequence preview |
 | `logic/var_logic.py` | Manages the variable table; evaluates Python expressions with iterative dependency resolution (bubbles unresolvable rows downward); syncs variable names into all pulse-table ComboBoxes |

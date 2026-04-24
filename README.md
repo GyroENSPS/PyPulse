@@ -131,6 +131,7 @@ PyPulse/
    triggers per point and per sequence.
 
 5. **Compute the sequence** — click *Compute Sequence* to generate the full pattern.
+   The total sequence duration is displayed in the UI after computation.
    A summary file is automatically saved to `sequences/last_measurement_sequence.txt`.
 
 6. **Stream to hardware** — click *Run Continuous* or *Run N times*
