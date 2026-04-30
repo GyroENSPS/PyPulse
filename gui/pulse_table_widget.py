@@ -57,14 +57,15 @@ class PulseTableWidget:
         combo.activated.connect(self._on_change)
         return combo
 
-    def _create_column(self, col: int):
+    def _create_column(self, col: int, resize: bool = True):
         self.table.setCellWidget(0, col, self._create_combobox())
         for row in range(1, 9):
             self.table.setCellWidget(row, col, self._create_checkbox(row, col))
         for row in range(9, 11):
             self.table.setItem(row, col, QTableWidgetItem("0"))
         self.table.setHorizontalHeaderItem(col, QTableWidgetItem(str(col)))
-        self.table.resizeColumnsToContents()
+        if resize:
+            self.table.resizeColumnsToContents()
 
     def _copy_column(self, col: int) -> list:
         result = []
@@ -83,9 +84,13 @@ class PulseTableWidget:
         for row, value in enumerate(data):
             widget = self.table.cellWidget(row, col)
             if isinstance(widget, QCheckBox):
+                widget.blockSignals(True)
                 widget.setChecked(value == "True")
+                widget.blockSignals(False)
             elif isinstance(widget, QComboBox):
+                widget.blockSignals(True)
                 widget.setCurrentIndex(int(value))
+                widget.blockSignals(False)
             else:
                 self.table.setItem(row, col, QTableWidgetItem(value or "0"))
 
@@ -218,13 +223,22 @@ class PulseTableWidget:
             print("Empty config file.")
             return
         headers = list(config[sections[0]].keys())
-        self.table.setRowCount(len(sections))
-        self.table.setColumnCount(len(headers))
-        self.table.setHorizontalHeaderLabels(headers)
-        for col, key in enumerate(headers):
-            col_data = [config.get(s, key, fallback="") for s in sections]
-            self._create_column(col)
-            self._fill_column(col, col_data)
+
+        saved_callback = self._on_change_callback
+        self._on_change_callback = None
+        self.table.setUpdatesEnabled(False)
+        try:
+            self.table.setRowCount(len(sections))
+            self.table.setColumnCount(len(headers))
+            self.table.setHorizontalHeaderLabels(headers)
+            for col, key in enumerate(headers):
+                col_data = [config.get(s, key, fallback="") for s in sections]
+                self._create_column(col, resize=False)
+                self._fill_column(col, col_data)
+            self.table.resizeColumnsToContents()
+        finally:
+            self.table.setUpdatesEnabled(True)
+            self._on_change_callback = saved_callback
 
     def update_combobox_items(self, new_names: list):
         """Refresh all ComboBox items when variable names change."""
