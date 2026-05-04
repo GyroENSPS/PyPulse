@@ -128,7 +128,8 @@ PyPulse/
 3. **Preview the waveform** using the *Plot Pulse* button (Tab 1).
 
 4. **Configure the sweep** (Tab 2): set min/max/step values, number of points,
-   triggers per point and per sequence.
+   triggers per point and per sequence. Check *Log scale* to distribute measurement
+   points on a logarithmic scale (if min is 0, the first point is set to 1).
 
 5. **Compute the sequence** — click *Compute Sequence* to generate the full pattern.
    The total sequence duration is displayed in the UI after computation.

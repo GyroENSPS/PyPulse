@@ -164,7 +164,8 @@ class MainWindow(QtWidgets.QMainWindow):
             n_repeat=p["n_repeat"],
             min_val=p["min_val"],
             max_val=p["max_val"],
-            path=path
+            path=path,
+            logscale=p["logscale"],
         )
 
     def _on_sequence_error(self, error_msg):
@@ -218,6 +219,7 @@ class MainWindow(QtWidgets.QMainWindow):
             if sequence_trigger_enabled else -1,
             "sequence_trigger_duration": self.ui.spinBox_trigger_per_sequence_duration.value(),
             "insert_point_trigger": point_trigger_enabled and self.ui.checkBox_insert_point_trig.isChecked(),
+            "logscale": self.ui.checkBox_logscale.isChecked(),
         }
 
     def _preview_sequence(self):
@@ -231,6 +233,7 @@ class MainWindow(QtWidgets.QMainWindow):
             insert_point_trigger=p["insert_point_trigger"],
             sequence_trigger_channel=p["sequence_trigger_channel"],
             sequence_trigger_duration=p["sequence_trigger_duration"],
+            logscale=p["logscale"],
         )
         self.pulse_viewer.plot_sequence(final_patterns, self.ui.pulse_sequence_view)
 

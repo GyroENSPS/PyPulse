@@ -131,7 +131,8 @@ class SequenceLogic:
                                    point_trigger_duration: int,
                                    insert_point_trigger: bool,
                                    sequence_trigger_channel: int,
-                                   sequence_trigger_duration: int) -> tuple:
+                                   sequence_trigger_duration: int,
+                                   logscale: bool = False) -> tuple:
         """
         Génère la séquence complète de mesure (balayage du paramètre variable).
         Retourne (final_patterns, total_tuple_length, total_measurement_time).
@@ -161,7 +162,10 @@ class SequenceLogic:
             if isinstance(checkbox, QCheckBox) and checkbox.isChecked():
                 var_conds_idx.append(row)
 
-        meas_points = np.linspace(min_val, max_val, num_points, dtype=int)
+        if logscale:
+            meas_points = np.logspace(np.log10(max(1, min_val)), np.log10(max_val), num_points).astype(int)
+        else:
+            meas_points = np.linspace(min_val, max_val, num_points, dtype=int)
 
         # Pré-calcul des durées résolues pour chaque point de mesure
         all_new_durations = []
@@ -271,7 +275,7 @@ class SequenceLogic:
         return final_patterns, total_tuple_length
 
     def export_sequence_summary(self, final_patterns: list, num_points: int, n_repeat: int,
-                                min_val: int, max_val: int, path: str):
+                                min_val: int, max_val: int, path: str, logscale: bool = False):
         """
         Generates a .txt summary file with:
         - Measurement points list
@@ -282,8 +286,11 @@ class SequenceLogic:
         from gui.pulse_viewer import CHANNEL_LABELS
 
         pulse_durations, IO_matrix, variable_index, param_per_col = self.read_table()
-        meas_points = list(range(min_val, max_val + 1,
-                                 max(1, (max_val - min_val) // max(1, num_points - 1))))[:num_points]
+        if logscale:
+            meas_points = np.logspace(np.log10(max(1, min_val)), np.log10(max_val), num_points).astype(int).tolist()
+        else:
+            meas_points = list(range(min_val, max_val + 1,
+                                     max(1, (max_val - min_val) // max(1, num_points - 1))))[:num_points]
 
         lines = []
 
