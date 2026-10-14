@@ -93,7 +93,7 @@ Or in PyCharm, right-click `main.py` → **Run 'main'**.
 ```
 PyPulse/
 ├── main.py                    # Entry point
-├── client.py                  # TCP client for remote control
+├── client_PyPulse.py          # TCP client for remote control
 ├── config/
 │   ├── hardware.cfg           # Hardware configuration
 │   ├── pulse_config/          # Saved pulse configurations
@@ -143,14 +143,14 @@ PyPulse/
 ## Remote Control API
 
 PyPulse starts a TCP server on `localhost:5025` at launch.
-You can control it from any Python script or Jupyter notebook using `client.py`.
+You can control it from any Python script or Jupyter notebook using `client_PyPulse.py`.
 
 ### Example
 
 ```python
 import sys
 sys.path.insert(0, r"C:\path\to\PyPulse")
-from client import PyPulseClient
+from client_PyPulse import PyPulseClient
 
 ps = PyPulseClient()   # host="localhost", port=5025
 ps.connect()
@@ -179,7 +179,13 @@ ps.disconnect()
 | `SET_MAX <val>` | `set_max(val)` | Set sweep maximum (ns) |
 | `SET_NUM_POINTS <val>` | `set_num_points(val)` | Set number of sweep points |
 | `SET_N_REPEAT <val>` | `set_n_repeat(val)` | Set repetitions per point |
+| `SET_LOGSCALE <ON\|OFF>` | `set_logscale(bool)` | Distribute measurement points on a log scale (`np.logspace`) or linearly |
+| `SET_SEQ_TRIGGER <ON\|OFF>` | `set_seq_trigger(bool)` | Enable / disable the trigger pulse at the start of the sequence |
+| `SET_N_RUNS <val>` | `set_n_runs(val)` | Set the number of sequence repetitions used by `RUN_N_TIMES` |
 | `GET? min` | `get("min")` | Read current sweep minimum |
 | `GET? max` | `get("max")` | Read current sweep maximum |
 | `GET? num_points` | `get("num_points")` | Read number of points |
 | `GET? n_repeat` | `get("n_repeat")` | Read repetitions per point |
+| `GET? logscale` | `get("logscale")` | Read log-scale state (`1` / `0`) |
+| `GET? seq_trigger` | `get("seq_trigger")` | Read sequence-start trigger state (`1` / `0`) |
+| `GET? n_runs` | `get("n_runs")` | Read number of sequence repetitions for `RUN_N_TIMES` |

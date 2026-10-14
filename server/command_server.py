@@ -68,6 +68,17 @@ class CommandServer(QObject):
         except Exception:
             pass
 
+    @staticmethod
+    def _set_checkbox(checkbox, arg: str, cmd_name: str) -> str:
+        arg = arg.strip().lower()
+        if arg in ("1", "on", "true"):
+            checkbox.setChecked(True)
+        elif arg in ("0", "off", "false"):
+            checkbox.setChecked(False)
+        else:
+            return f"ERROR Usage: {cmd_name} <ON|OFF>"
+        return "OK"
+
     def _dispatch(self, cmd: str) -> str:
         w = self.window
 
@@ -120,6 +131,18 @@ class CommandServer(QObject):
             w.ui.spinBox_n_repeat.setValue(int(cmd[13:].strip()))
             return "OK"
 
+        elif cmd.startswith("SET_N_RUNS "):
+            # Number of sequence repetitions used by RUN_N_TIMES
+            w.ui.spinBox_n_average.setValue(int(cmd[11:].strip()))
+            return "OK"
+
+        elif cmd.startswith("SET_LOGSCALE "):
+            return self._set_checkbox(w.ui.checkBox_logscale, cmd[13:], "SET_LOGSCALE")
+
+        elif cmd.startswith("SET_SEQ_TRIGGER "):
+            return self._set_checkbox(w.ui.checkBox_trigger_per_sequence_check,
+                                      cmd[16:], "SET_SEQ_TRIGGER")
+
         elif cmd.startswith("SET_VAR "):
             # Syntax: SET_VAR <name> <expression>
             parts = cmd[8:].split(None, 1)
@@ -146,6 +169,15 @@ class CommandServer(QObject):
 
         elif cmd == "GET? n_repeat":
             return str(w.ui.spinBox_n_repeat.value())
+
+        elif cmd == "GET? n_runs":
+            return str(w.ui.spinBox_n_average.value())
+
+        elif cmd == "GET? logscale":
+            return "1" if w.ui.checkBox_logscale.isChecked() else "0"
+
+        elif cmd == "GET? seq_trigger":
+            return "1" if w.ui.checkBox_trigger_per_sequence_check.isChecked() else "0"
 
         else:
             return f"ERROR Unknown command: {cmd}"

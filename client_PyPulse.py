@@ -84,6 +84,19 @@ class PyPulseClient:
     def set_n_repeat(self, value: int) -> str:
         return self.send(f"SET_N_REPEAT {value}")
 
+    def set_logscale(self, enabled: bool) -> str:
+        """Distribute measurement points with np.logspace (True) or np.linspace (False)."""
+        return self.send(f"SET_LOGSCALE {'ON' if enabled else 'OFF'}")
+
+    def set_seq_trigger(self, enabled: bool) -> str:
+        """Enable or disable the trigger pulse at the start of the sequence."""
+        return self.send(f"SET_SEQ_TRIGGER {'ON' if enabled else 'OFF'}")
+
+    # --- Paramètres streaming ---
+    def set_n_runs(self, value: int) -> str:
+        """Set the number of sequence repetitions used by run_n_times()."""
+        return self.send(f"SET_N_RUNS {value}")
+
     def set_var(self, name: str, expression: str) -> str:
         """
         Update a variable expression in the variable table.
