@@ -61,6 +61,10 @@ class PulseViewer:
         Highlights the sweep variable region if variable_index is not empty.
         """
         self.plot.clear()
+        # Recomputing the auto-range for each added item is very slow: do it once at the end
+        view_box = self.plot.getViewBox()
+        auto_x, auto_y = view_box.autoRangeEnabled()
+        view_box.disableAutoRange()
 
         # Compute time axis (oversampled for step plot)
         pulses_timings = [sum(pulse_durations[:i // 2]) for i in range(len(pulse_durations) * 2 + 1)]
@@ -111,6 +115,8 @@ class PulseViewer:
                 brush=fill_color,
                 fillLevel=offset
             )
+
+        view_box.enableAutoRange(x=auto_x, y=auto_y)
 
     def clear(self):
         self.plot.clear()

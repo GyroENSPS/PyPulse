@@ -37,7 +37,8 @@ class SequenceLogic:
                 continue
             idx = combo.currentIndex()
             param_per_col[col] = idx
-            if var_values[idx] is not None:
+            # idx can be out of range while the var table is being reloaded
+            if 0 <= idx < len(var_values) and var_values[idx] is not None:
                 pulse_durations[col] = var_values[idx]
 
             var_checkbox = self.var_logic.table.cellWidget(idx, 3)

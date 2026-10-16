@@ -8,9 +8,10 @@ class VarLogic:
     Columns: name | value | description | variable (CheckBox sweep flag)
     """
 
-    def __init__(self, var_table_widget, pulse_table_widget_ref):
+    def __init__(self, var_table_widget, pulse_table_widget_ref, on_change_callback=None):
         self.table = var_table_widget
         self.pulse_table = pulse_table_widget_ref  # PulseTableWidget instance
+        self._on_change_callback = on_change_callback
         self.python_var_flag = False
         self._init_first_row()
         try:
@@ -44,6 +45,12 @@ class VarLogic:
     def _on_var_change(self, row: int):
         """Called when a variable checkbox changes."""
         pass
+
+    def _notify_change(self):
+        """Single refresh after a bulk edit done with table signals blocked."""
+        self.update_param_names()
+        if self._on_change_callback:
+            self._on_change_callback()
 
     # --- Public API ---
 
@@ -154,7 +161,7 @@ class VarLogic:
                     if row < row_count - 1:
                         self.swap_vars(row, row + 1)
 
-        self.update_param_names()
+        self._notify_change()
         return var_values
 
     def swap_vars(self, row_a: int, row_b: int):
@@ -175,10 +182,13 @@ class VarLogic:
             else:
                 item = self.table.item(row_b, col)
                 row2.append(item.text() if item else "0")
-        self._fill_row(row_b, row1)
-        self._fill_row(row_a, row2)
-        self.python_var_flag = False
-        self.update_param_names()
+        self.table.blockSignals(True)
+        try:
+            self._fill_row(row_b, row1)
+            self._fill_row(row_a, row2)
+        finally:
+            self.table.blockSignals(False)
+            self.python_var_flag = False
 
     def save_config(self, path: str):
         config = configparser.ConfigParser()
@@ -209,12 +219,17 @@ class VarLogic:
             print("Empty config file.")
             return
         keys = list(config[sections[0]].keys())
-        self.table.clearContents()
-        self.table.setRowCount(len(keys))
-        self.table.setColumnCount(len(sections))
-        self.table.setHorizontalHeaderLabels(sections)
-        for row, key in enumerate(keys):
-            row_data = [config.get(s, key, fallback="") for s in sections]
-            self._create_var_row(row)
-            self._fill_row(row, row_data)
-        self.update_param_names()
+        # Block cellChanged/itemChanged while filling: each emission redraws the preview
+        self.table.blockSignals(True)
+        try:
+            self.table.clearContents()
+            self.table.setRowCount(len(keys))
+            self.table.setColumnCount(len(sections))
+            self.table.setHorizontalHeaderLabels(sections)
+            for row, key in enumerate(keys):
+                row_data = [config.get(s, key, fallback="") for s in sections]
+                self._create_var_row(row)
+                self._fill_row(row, row_data)
+        finally:
+            self.table.blockSignals(False)
+        self._notify_change()

@@ -27,7 +27,8 @@ from any Python script or Jupyter notebook.
 
 ## Requirements
 
-- Python 3.10+
+- Python 3.10 – 3.12 (Python 3.13+ is **not** supported yet: the variable table is evaluated
+  with `exec()`, whose handling of local variables changed in 3.13 — PEP 667)
 - PyCharm (recommended) or any Python IDE
 - A Swabian Instruments PulseStreamer 8/2 (optional for UI-only use)
 
@@ -121,6 +122,10 @@ PyPulse/
 
 1. **Define variables** in the variable table (name + Python expression).
    Variables can reference each other — PyPulse resolves dependencies automatically.
+   A saved variable configuration can be reloaded with *Load*; the table is filled in one
+   pass and the waveform preview is refreshed once at the end. If the loaded configuration
+   has fewer variables than before, pulse-table columns that pointed to a removed variable
+   lose their selection (duration 0) — re-select them in the top ComboBox.
 
 2. **Build the pulse table** — each column is a segment, each row a channel.
    Select the duration variable for each segment via the top ComboBox.
