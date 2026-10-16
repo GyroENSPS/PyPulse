@@ -181,6 +181,8 @@ ps.disconnect()
 | `SET_N_REPEAT <val>` | `set_n_repeat(val)` | Set repetitions per point |
 | `SET_LOGSCALE <ON\|OFF>` | `set_logscale(bool)` | Distribute measurement points on a log scale (`np.logspace`) or linearly |
 | `SET_SEQ_TRIGGER <ON\|OFF>` | `set_seq_trigger(bool)` | Enable / disable the trigger pulse at the start of the sequence |
+| `SET_POINT_TRIGGER <ON\|OFF>` | `set_point_trigger(bool)` | Enable / disable the trigger per point |
+| `SET_DATE_TAG <ON\|OFF>` | `set_date_tag(bool)` | Add / remove the date tag in the exported sequence file name |
 | `SET_N_RUNS <val>` | `set_n_runs(val)` | Set the number of sequence repetitions used by `RUN_N_TIMES` |
 | `GET? min` | `get("min")` | Read current sweep minimum |
 | `GET? max` | `get("max")` | Read current sweep maximum |
@@ -188,4 +190,6 @@ ps.disconnect()
 | `GET? n_repeat` | `get("n_repeat")` | Read repetitions per point |
 | `GET? logscale` | `get("logscale")` | Read log-scale state (`1` / `0`) |
 | `GET? seq_trigger` | `get("seq_trigger")` | Read sequence-start trigger state (`1` / `0`) |
+| `GET? point_trigger` | `get("point_trigger")` | Read trigger-per-point state (`1` / `0`) |
+| `GET? date_tag` | `get("date_tag")` | Read date-tag state (`1` / `0`) |
 | `GET? n_runs` | `get("n_runs")` | Read number of sequence repetitions for `RUN_N_TIMES` |

@@ -92,6 +92,14 @@ class PyPulseClient:
         """Enable or disable the trigger pulse at the start of the sequence."""
         return self.send(f"SET_SEQ_TRIGGER {'ON' if enabled else 'OFF'}")
 
+    def set_point_trigger(self, enabled: bool) -> str:
+        """Check or uncheck 'trigger per point' Enabled."""
+        return self.send(f"SET_POINT_TRIGGER {'ON' if enabled else 'OFF'}")
+
+    def set_date_tag(self, enabled: bool) -> str:
+        """Check or uncheck 'add date tag to the sequence config file'."""
+        return self.send(f"SET_DATE_TAG {'ON' if enabled else 'OFF'}")
+
     # --- Paramètres streaming ---
     def set_n_runs(self, value: int) -> str:
         """Set the number of sequence repetitions used by run_n_times()."""

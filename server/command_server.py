@@ -143,6 +143,14 @@ class CommandServer(QObject):
             return self._set_checkbox(w.ui.checkBox_trigger_per_sequence_check,
                                       cmd[16:], "SET_SEQ_TRIGGER")
 
+        elif cmd.startswith("SET_POINT_TRIGGER "):
+            return self._set_checkbox(w.ui.checkBox_trigger_per_point_check,
+                                      cmd[18:], "SET_POINT_TRIGGER")
+
+        elif cmd.startswith("SET_DATE_TAG "):
+            return self._set_checkbox(w.ui.checkBox_autodate_lastsequence,
+                                      cmd[13:], "SET_DATE_TAG")
+
         elif cmd.startswith("SET_VAR "):
             # Syntax: SET_VAR <name> <expression>
             parts = cmd[8:].split(None, 1)
@@ -178,6 +186,12 @@ class CommandServer(QObject):
 
         elif cmd == "GET? seq_trigger":
             return "1" if w.ui.checkBox_trigger_per_sequence_check.isChecked() else "0"
+
+        elif cmd == "GET? point_trigger":
+            return "1" if w.ui.checkBox_trigger_per_point_check.isChecked() else "0"
+
+        elif cmd == "GET? date_tag":
+            return "1" if w.ui.checkBox_autodate_lastsequence.isChecked() else "0"
 
         else:
             return f"ERROR Unknown command: {cmd}"
